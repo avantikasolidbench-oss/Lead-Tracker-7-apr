@@ -3791,7 +3791,8 @@ function inv_hideModal() { document.getElementById('modalOverlay').style.display
 function inv_handleImgUpload(input) {
   const file = input.files[0];
   if (!file) return;
-  document.getElementById('m_img_filename').textContent = file.name;
+  const fnEl = document.getElementById('m_img_filename');
+  if(fnEl) fnEl.textContent = file.name;
   const reader = new FileReader();
   reader.onload = function(e) {
     document.getElementById('m_img').value = e.target.result;
@@ -3827,6 +3828,7 @@ function inv_addCustomItem() {
   ['m_name','m_dims','m_wood','m_img','m_remarks','m_offered'].forEach(id => document.getElementById(id).value='');
   document.getElementById('m_img_file').value='';
   document.getElementById('m_img_preview').style.display='none';
+  const fnEl2=document.getElementById('m_img_filename');if(fnEl2)fnEl2.textContent='';
   document.getElementById('m_qty').value=1; document.getElementById('m_price').value='';
   document.getElementById('m_hasDisc').checked=false; document.getElementById('m_discRow').style.display='none';
   inv_renderCatalog(); inv_renderInvoice();
@@ -4449,12 +4451,20 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
       <div><label>Unit Price ₹ *</label><input id="m_price" type="number" placeholder="0"></div>
       <div class="full">
         <label>Image (optional)</label>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div id="m_img_drop"
+          style="border:2px dashed #d4c9b0;border-radius:6px;padding:16px;text-align:center;background:#faf7f2;transition:all 0.2s;cursor:pointer;position:relative"
+          ondragover="event.preventDefault();event.stopPropagation();this.style.background='#f0ebe0';this.style.borderColor='#c4922a';"
+          ondragleave="this.style.background='#faf7f2';this.style.borderColor='#d4c9b0';"
+          ondrop="event.preventDefault();event.stopPropagation();this.style.background='#faf7f2';this.style.borderColor='#d4c9b0';var f=event.dataTransfer.files[0];if(f&&f.type.startsWith('image/')){var inp=document.getElementById('m_img_file');var dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;inv_handleImgUpload(inp);}else{alert('Please drop an image file');}">
+          <div style="font-size:11px;color:#7a6e5f;margin-bottom:6px">📷 Drop image here or click to browse</div>
           <input type="file" id="m_img_file" accept="image/*" onchange="inv_handleImgUpload(this)"
-            style="font-size:12px;color:#1a1410;cursor:pointer;font-family:'DM Sans',sans-serif;max-width:220px">
+            style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer">
         </div>
-        <div id="m_img_preview" style="display:none;margin-top:8px">
+        <div id="m_img_preview" style="display:none;margin-top:8px;position:relative">
           <img id="m_img_preview_img" style="height:64px;border-radius:4px;border:1px solid #d4c9b0">
+          <span id="m_img_filename" style="font-size:11px;color:#7a6e5f;margin-left:8px;vertical-align:middle"></span>
+          <button onclick="document.getElementById('m_img').value='';document.getElementById('m_img_preview').style.display='none';document.getElementById('m_img_file').value='';"
+            style="margin-left:8px;background:none;border:none;color:#c0392b;cursor:pointer;font-size:12px">✕ Remove</button>
         </div>
         <input type="hidden" id="m_img">
       </div>
