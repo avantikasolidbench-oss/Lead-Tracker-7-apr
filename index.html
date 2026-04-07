@@ -907,6 +907,7 @@ async function pullFromSheets(silent){
       nextInvId=Math.max(...savedInvoices.map(s=>Number(s.id)||0),0)+1;
       invSave();
       inv_renderSavedList();
+  if(typeof inv_renderLibrary==="function")inv_renderLibrary();
     }
 
     const leadsMsg = jLeads.leads ? jLeads.leads.length+" leads" : "0 leads";
@@ -4067,6 +4068,92 @@ function inv_renderInvoice(){
 inv_loadCatalog();
 
 // ── INVOICE SAVED LIST ───────────────────────────────────────────────────────
+// ── INVOICE LIBRARY ──────────────────────────────────────────
+let _invLibSearch='', _invLibFilter='';
+const _invCollapsed=new Set();
+
+function inv_renderLibrary(){
+  const wrap=document.getElementById('inv-library-wrap');
+  if(!wrap)return;
+  const clients=[...new Set(savedInvoices.map(s=>s.leadRef||'').filter(Boolean))].sort();
+  const filterOpts=`<option value="">All Clients</option>`+
+    clients.map(c=>`<option value="${esc(c)}" ${_invLibFilter===c?'selected':''}>${esc(c)}</option>`).join('');
+
+  // Filter
+  let filtered=savedInvoices.filter(s=>{
+    const q=_invLibSearch.toLowerCase();
+    const matchSearch=!q||(s.invNum||'').toLowerCase().includes(q)||(s.clientName||'').toLowerCase().includes(q)||(s.leadRef||'').toLowerCase().includes(q);
+    const matchFilter=!_invLibFilter||(s.leadRef||'')===_invLibFilter;
+    return matchSearch&&matchFilter;
+  });
+
+  // Group by leadRef
+  const groups={};
+  filtered.forEach(s=>{
+    const key=s.leadRef||'__none__';
+    if(!groups[key])groups[key]=[];
+    groups[key].push(s);
+  });
+  const sortedKeys=Object.keys(groups).sort((a,b)=>{
+    if(a==='__none__')return 1;if(b==='__none__')return -1;
+    return a.localeCompare(b);
+  });
+
+  const forceExpand=!!(_invLibSearch||_invLibFilter);
+
+  const rows=sortedKeys.map(key=>{
+    const sheets=groups[key];
+    const isNone=key==='__none__';
+    const isCollapsed=!forceExpand&&_invCollapsed.has(key)&&!(sheets.some(s=>s.id===activeInvId));
+    const chevron=isCollapsed?'▶':'▼';
+    const safeKey=key.replace(/'/g,"\'");
+
+    const sheetRows=isCollapsed?'':sheets.map(s=>{
+      const isActive=s.id===activeInvId;
+      return`<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:9px 16px 9px 32px;border-bottom:1px solid #f8f7f2;background:${isActive?'#fffbf0':'#fff'};cursor:pointer"
+        onclick="inv_loadSaved('${s.id}')">
+        <div>
+          <span style="font-size:13px;font-weight:${isActive?'700':'500'};color:${isActive?'#92400e':'#374151'}">${isActive?'▶ ':''}${esc(s.invNum||'—')}</span>
+          ${s.clientName&&!s.leadRef?`<span style="font-size:11px;color:#94A3B8;margin-left:6px">${esc(s.clientName)}</span>`:''}
+          ${s.date?`<span style="font-size:10px;color:#CBD5E1;margin-left:8px">${esc(s.date)}</span>`:''}
+        </div>
+        <span style="font-size:11px;color:#94A3B8">${esc(s.date||'')}</span>
+        <span style="font-size:11px;color:#64748B">${esc(s.invNum||'')}</span>
+        <button onclick="event.stopPropagation();activeInvId=s.id;inv_deleteSaved()" style="background:none;border:none;cursor:pointer;color:#E2E8F0;font-size:16px;padding:0 2px">×</button>
+      </div>`;
+    }).join('');
+
+    const header=isNone
+      ?`<div onclick="_invCollapsed.has('${safeKey}')?_invCollapsed.delete('${safeKey}'):_invCollapsed.add('${safeKey}');inv_renderLibrary()" style="padding:8px 16px;background:#f8f7f2;border-bottom:1px solid #f0ebe0;display:flex;align-items:center;gap:8px;cursor:pointer">
+          <span style="font-size:10px;color:#94A3B8">${chevron}</span>
+          <span style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em">No Client Linked</span>
+          <span style="font-size:11px;color:#CBD5E1">${sheets.length} invoice${sheets.length>1?'s':''}</span>
+        </div>`
+      :`<div onclick="_invCollapsed.has('${safeKey}')?_invCollapsed.delete('${safeKey}'):_invCollapsed.add('${safeKey}');inv_renderLibrary()" style="padding:8px 16px;background:#f0ebe0;border-bottom:1px solid #e8dfc8;display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:#7a6e5f">${chevron}</span>
+            <span style="font-size:13px;font-weight:800;color:#1a1410">👤 ${esc(key)}</span>
+            <span style="font-size:11px;color:#94A3B8">${sheets.length} invoice${sheets.length>1?'s':''}</span>
+          </div>
+        </div>`;
+    return header+sheetRows;
+  }).join('');
+
+  wrap.innerHTML=`<div style="border:1px solid #e8dfc8;border-radius:8px;overflow:hidden;margin-top:4px">
+    <div style="background:#1a1410;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span style="font-size:13px;font-weight:700;color:#c4922a">📄 All Saved Invoices (${savedInvoices.length})</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input style="width:140px;background:#2e2820;border:1px solid #3a3028;border-radius:4px;padding:4px 8px;font-size:12px;color:#e8dfc8;outline:none" placeholder="Search…"
+          value="${esc(_invLibSearch)}" oninput="_invLibSearch=this.value;inv_renderLibrary()">
+        <select style="background:#2e2820;border:1px solid #3a3028;border-radius:4px;padding:4px 8px;font-size:12px;color:#e8dfc8;outline:none" onchange="_invLibFilter=this.value;inv_renderLibrary()">
+          ${filterOpts}
+        </select>
+      </div>
+    </div>
+    <div>${filtered.length?rows:'<p style="text-align:center;padding:20px;color:#94A3B8;font-size:13px">No invoices yet.</p>'}</div>
+  </div>`;
+}
+
 function inv_renderSavedList(){
   const sel=document.getElementById('inv-saved-list');
   const delBtn=document.getElementById('inv-delete-btn');
@@ -4104,6 +4191,7 @@ function inv_saveToList(){
   invSave();
   invSaveToSheets(inv);
   inv_renderSavedList();
+  if(typeof inv_renderLibrary==="function")inv_renderLibrary();
   const sel=document.getElementById('inv-saved-list');
   if(sel)sel.value=id;
   const delBtn=document.getElementById('inv-delete-btn');
@@ -4143,6 +4231,7 @@ function inv_deleteSaved(){
   invSave();
   invDeleteFromSheets(s.id);
   inv_renderSavedList();
+  if(typeof inv_renderLibrary==="function")inv_renderLibrary();
   inv_clearInvoice();
 }
 
@@ -4317,17 +4406,16 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
       <button class="btn btn-outline" onclick="inv_clearInvoice()">Clear All</button>
       <button class="btn btn-primary" onclick="inv_printAndIncrement()">⎙ Print / PDF</button>
     </div>
-    <!-- Row 3: Saved invoices list at the end -->
-    <div style="border-top:1px solid #e8e0d0;padding-top:12px">
-      <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#7a6e5f;margin-bottom:6px">Saved Invoices</div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <select id="inv-saved-list" onchange="inv_loadSaved(this.value)" style="flex:1;border:1px solid #d4c9b0;border-radius:4px;padding:6px 8px;font-family:'DM Sans',sans-serif;font-size:12px;background:#faf7f2;color:#1a1410;outline:none">
-          <option value="">— Select a saved invoice —</option>
-        </select>
-        <button onclick="inv_saveToList()" class="btn btn-outline" title="Save current invoice to list">💾 Save to list</button>
-        <button onclick="inv_deleteSaved()" id="inv-delete-btn" style="background:none;border:1px solid #d4c9b0;border-radius:4px;padding:6px 8px;font-size:12px;cursor:pointer;color:#c0392b;display:none">🗑</button>
-      </div>
+    <!-- Row 3: Save to list -->
+    <div style="border-top:1px solid #e8e0d0;padding-top:12px;display:flex;gap:8px;align-items:center;margin-bottom:16px">
+      <button onclick="inv_saveToList()" class="btn btn-outline" style="flex:1">💾 Save to list</button>
+      <button onclick="inv_deleteSaved()" id="inv-delete-btn" style="background:none;border:1px solid #d4c9b0;border-radius:4px;padding:6px 8px;font-size:12px;cursor:pointer;color:#c0392b;display:none">🗑 Delete</button>
     </div>
+    <!-- hidden select kept for JS compatibility -->
+    <select id="inv-saved-list" onchange="inv_loadSaved(this.value)" style="display:none"></select>
+
+    <!-- All Invoices Library -->
+    <div id="inv-library-wrap"></div>
   </div>
 </main>
 <!-- CUSTOM ITEM MODAL -->
