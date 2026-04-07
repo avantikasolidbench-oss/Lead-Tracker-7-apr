@@ -4109,17 +4109,22 @@ function inv_renderLibrary(){
     const safeKey=key.replace(/'/g,"\'");
 
     const sheetRows=isCollapsed?'':sheets.map(s=>{
+      const leadOpts=leads.map(l=>`<option value="${esc(l.name)}" ${l.name===s.leadRef?'selected':''}>${esc(l.name)}</option>`).join('');
       const isActive=s.id===activeInvId;
-      return`<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:9px 16px 9px 32px;border-bottom:1px solid #f8f7f2;background:${isActive?'#fffbf0':'#fff'};cursor:pointer"
-        onclick="inv_loadSaved('${s.id}')">
-        <div>
+      return`<div style="display:flex;align-items:center;gap:8px;padding:9px 16px 9px 32px;border-bottom:1px solid #f8f7f2;background:${isActive?'#fffbf0':'#fff'}">
+        <div style="flex:1;cursor:pointer;min-width:0" onclick="inv_loadSaved('${s.id}')">
           <span style="font-size:13px;font-weight:${isActive?'700':'500'};color:${isActive?'#92400e':'#374151'}">${isActive?'▶ ':''}${esc(s.invNum||'—')}</span>
-          ${s.clientName&&!s.leadRef?`<span style="font-size:11px;color:#94A3B8;margin-left:6px">${esc(s.clientName)}</span>`:''}
           ${s.date?`<span style="font-size:10px;color:#CBD5E1;margin-left:8px">${esc(s.date)}</span>`:''}
+          ${s.clientName?`<span style="font-size:11px;color:#94A3B8;margin-left:6px">${esc(s.clientName)}</span>`:''}
         </div>
-        <span style="font-size:11px;color:#94A3B8">${esc(s.date||'')}</span>
-        <span style="font-size:11px;color:#64748B">${esc(s.invNum||'')}</span>
-        <button onclick="event.stopPropagation();activeInvId=s.id;inv_deleteSaved()" style="background:none;border:none;cursor:pointer;color:#E2E8F0;font-size:16px;padding:0 2px">×</button>
+        <select onchange="inv_assignLead('${s.id}',this.value)"
+          style="font-size:11px;border:1px solid #e8dfc8;border-radius:4px;padding:3px 6px;background:#faf7f2;color:#1a1410;outline:none;max-width:160px">
+          <option value="">— Assign lead —</option>
+          ${leadOpts}
+        </select>
+        <button onclick="inv_loadSaved('${s.id}')" style="background:#f0ebe0;border:none;border-radius:4px;padding:3px 8px;font-size:11px;color:#7a6e5f;cursor:pointer">Open</button>
+        <button onclick="inv_assignLead('${s.id}','');this.closest('div').querySelector('select').value=''" style="background:none;border:none;cursor:pointer;color:#d4c9b0;font-size:11px;padding:0 2px" title="Unlink">✕</button>
+        <button onclick="if(confirm('Delete this invoice?')){savedInvoices=savedInvoices.filter(x=>x.id!='${s.id}');invSave();inv_renderSavedList();}" style="background:none;border:none;cursor:pointer;color:#E2E8F0;font-size:16px;padding:0 2px">×</button>
       </div>`;
     }).join('');
 
@@ -4152,6 +4157,20 @@ function inv_renderLibrary(){
     </div>
     <div>${filtered.length?rows:'<p style="text-align:center;padding:20px;color:#94A3B8;font-size:13px">No invoices yet.</p>'}</div>
   </div>`;
+}
+
+function inv_assignLead(id, leadRef){
+  const inv=savedInvoices.find(s=>String(s.id)===String(id));
+  if(!inv)return;
+  inv.leadRef=leadRef;
+  // Also update clientName from lead if assigning
+  if(leadRef){
+    const l=leads.find(x=>x.name===leadRef);
+    if(l&&!inv.clientName) inv.clientName=l.name;
+  }
+  invSave();
+  invSaveToSheets(inv);
+  inv_renderSavedList();
 }
 
 function inv_renderSavedList(){
