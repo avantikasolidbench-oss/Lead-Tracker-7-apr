@@ -995,7 +995,7 @@ function switchTab(tab){
   if(tab==="lost")renderLost();
   if(tab==="costing")renderCosting();
   if(tab==="analytics")renderAnalytics();
-  if(tab==="invoice"&&typeof inv_renderInvoice==="function"){inv_renderInvoice();inv_renderSavedList();}
+  if(tab==="invoice"&&typeof inv_renderInvoice==="function"){inv_renderInvoice();inv_renderSavedList();if(typeof inv_renderLibrary==="function")inv_renderLibrary();}
 }
 function showList(){$("view-list").classList.remove("hidden");$("view-add").classList.add("hidden");$("view-detail").classList.add("hidden");renderAll();}
 function showAdd(){$("view-add").classList.remove("hidden");$("view-list").classList.add("hidden");$("view-detail").classList.add("hidden");}
