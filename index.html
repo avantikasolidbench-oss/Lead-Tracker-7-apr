@@ -802,7 +802,7 @@ const fmt=d=>{if(!d)return"—";const[y,m,day]=d.split("-");return`${day} ${MONT
 const isOD=d=>d&&new Date(d)<new Date(new Date().toDateString());
 const rupee=n=>"₹"+Math.round(n).toLocaleString("en-IN");
 const mmCft=(l,w,t)=>(l/25.4/12)*(w/25.4/12)*(t/25.4/12);
-const mk=d=>{const dt=new Date(d||Date.now());return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
+const mk=d=>{if(!d)return`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;const s=String(d).trim();if(s.match(/^\d{4}-\d{2}/))return s.slice(0,7);if(s.match(/^\d{1,2}\/\d{1,2}\/\d{4}/)){const p=s.split('/');return`${p[2].slice(0,4)}-${String(p[0]).padStart(2,'0')}`;}const dt=new Date(d);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;};
 
 // ── STORAGE ───────────────────────────────────────────────────
 const lSave=()=>localStorage.setItem("leads-v5",JSON.stringify(leads));
@@ -2665,17 +2665,14 @@ function renderAnalytics(){
     mMap[k].total++;
     const stage=resolveStage(l);
     if(stage==="Enquiry") mMap[k].enquiry++;
-    // Won/Lost bucketed by closedDate (when actually won/lost)
-    if(stage==="Won"&&l.closedDate){
-      const wk=mk(l.closedDate);
-      ensureMonth(wk);
-      mMap[wk].won++;
-      if(l.value)mMap[wk].wonAmt+=Number(l.value);
+    // Won/Lost bucketed by closedDate (when actually won/lost), fallback to lastUpdated
+    if(stage==="Won"){
+      const wd=l.closedDate||l.lastUpdated||l.createdAt;
+      if(wd){const wk=mk(wd);ensureMonth(wk);mMap[wk].won++;if(l.value)mMap[wk].wonAmt+=Number(l.value);}
     }
-    if(stage==="Lost"&&l.closedDate){
-      const lk=mk(l.closedDate);
-      ensureMonth(lk);
-      mMap[lk].lost++;
+    if(stage==="Lost"){
+      const ld=l.closedDate||l.lastUpdated||l.createdAt;
+      if(ld){const lk=mk(ld);ensureMonth(lk);mMap[lk].lost++;}
     }
   });
   const mEntries=Object.entries(mMap).sort((a,b)=>b[0].localeCompare(a[0]));
