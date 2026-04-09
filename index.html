@@ -2657,14 +2657,26 @@ function renderAnalytics(){
 
   // ── Section 4: Monthly trends ────────────────────────────────
   const mMap={};
+  const ensureMonth=(k)=>{if(!mMap[k])mMap[k]={total:0,enquiry:0,won:0,lost:0,wonAmt:0};};
   leads.forEach(l=>{
+    // Total/Enquiry bucketed by received date (when lead came in)
     const k=mk(l.receivedDate||l.createdAt);
-    if(!mMap[k])mMap[k]={total:0,enquiry:0,won:0,lost:0,wonAmt:0};
+    ensureMonth(k);
     mMap[k].total++;
     const stage=resolveStage(l);
     if(stage==="Enquiry") mMap[k].enquiry++;
-    if(stage==="Won"){mMap[k].won++;if(l.value)mMap[k].wonAmt+=Number(l.value);}
-    if(stage==="Lost") mMap[k].lost++;
+    // Won/Lost bucketed by closedDate (when actually won/lost)
+    if(stage==="Won"&&l.closedDate){
+      const wk=mk(l.closedDate);
+      ensureMonth(wk);
+      mMap[wk].won++;
+      if(l.value)mMap[wk].wonAmt+=Number(l.value);
+    }
+    if(stage==="Lost"&&l.closedDate){
+      const lk=mk(l.closedDate);
+      ensureMonth(lk);
+      mMap[lk].lost++;
+    }
   });
   const mEntries=Object.entries(mMap).sort((a,b)=>b[0].localeCompare(a[0]));
 
