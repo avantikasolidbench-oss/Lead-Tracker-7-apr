@@ -293,7 +293,7 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   /* Fix table for print — auto layout so columns size to content */
   #pane-invoice .inv-table { table-layout:auto !important; width:100% !important; }
   #pane-invoice .inv-table th,
-  #pane-invoice .inv-table td { font-size:10px !important; padding:5px 5px !important; word-break:normal !important; }
+  #pane-invoice .inv-table td { font-size:12px !important; padding:6px 6px !important; word-break:normal !important; }
   /* Number columns — never wrap */
   #pane-invoice .inv-table th.right,
   #pane-invoice .inv-table td.right,
@@ -314,9 +314,9 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #pane-invoice .inv-name-wrap input,
   #pane-invoice .inv-dims-wrap input,
   #pane-invoice .inv-wood-wrap input { display:none !important; }
-  #pane-invoice .inv-name-wrap::before { content:attr(data-val); font-weight:500; font-size:11px; white-space:normal; word-break:break-word; display:block; }
-  #pane-invoice .inv-dims-wrap::before { content:attr(data-val); font-size:10px; color:#7a7060; white-space:normal; word-break:break-word; display:block; }
-  #pane-invoice .inv-wood-wrap::before { content:attr(data-val); font-size:11px; white-space:normal; word-break:break-word; display:block; }
+  #pane-invoice .inv-name-wrap::before { content:attr(data-val); font-weight:500; font-size:12px; white-space:normal; word-break:break-word; display:block; }
+  #pane-invoice .inv-dims-wrap::before { content:attr(data-val); font-size:12px; color:#7a7060; white-space:normal; word-break:break-word; display:block; }
+  #pane-invoice .inv-wood-wrap::before { content:attr(data-val); font-size:12px; white-space:normal; word-break:break-word; display:block; }
   .no-print { display:none !important; }
   #pane-invoice .no-print { display:none !important; }
   #pane-invoice .print-only { display:inline !important; }
@@ -324,6 +324,10 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #pane-invoice .inv-offer-wrap input,
   #pane-invoice .inv-offer-wrap div { display:none !important; }
   #pane-invoice .inv-offer-wrap::before { content:attr(data-val); color:#c4922a; font-weight:500; font-size:12px; }
+.inv-qty-wrap input { display:none !important; }
+.inv-qty-wrap::before { content:attr(data-val); font-size:12px; }
+  #pane-invoice .inv-qty-wrap input { display:none !important; }
+  #pane-invoice .inv-qty-wrap::before { content:attr(data-val); font-size:12px; }
   #pane-invoice .item-sub a { display:none !important; }
   /* Totals block */
   #pane-invoice .inv-footer-row { page-break-inside:avoid; }
@@ -3624,18 +3628,22 @@ input, button, a { display:none !important; }
 .print-only { display:inline !important; }
 /* Inline wrapper display values */
 .inv-name-wrap, .inv-dims-wrap, .inv-wood-wrap, .inv-offer-wrap { display:block; }
-.inv-name-wrap::before { content:attr(data-val); font-weight:500; font-size:11px; display:block; }
-.inv-dims-wrap::before { content:attr(data-val); font-size:10px; color:#7a7060; display:block; }
-.inv-wood-wrap::before { content:attr(data-val); font-size:11px; display:block; }
+.inv-name-wrap::before { content:attr(data-val); font-weight:500; font-size:12px; display:block; }
+.inv-dims-wrap::before { content:attr(data-val); font-size:12px; color:#7a7060; display:block; }
+.inv-wood-wrap::before { content:attr(data-val); font-size:12px; display:block; }
 .inv-offer-wrap::before { content:attr(data-val); color:#c4922a; font-weight:500; font-size:12px; }
+.inv-qty-wrap input { display:none !important; }
+.inv-qty-wrap::before { content:attr(data-val); font-size:12px; }
 </style>
 </head>
-<body>
+<body style="visibility:hidden">
 <div class="invoice">${invoiceHTML}</div>
 <script>
 window.onload = function() {
-  // Small delay to let fonts load
-  setTimeout(function() { window.print(); }, 800);
+  setTimeout(function() {
+    document.body.style.visibility = 'visible';
+    window.print();
+  }, 800);
 };
 <\/script>
 </body>
@@ -4058,7 +4066,7 @@ function inv_renderInvoice(){
           </div>
         </td>
         <td><span class="inv-wood-wrap" data-val="${(it.wood||'').replace(/"/g,'&quot;')}"><input class="editable wide" type="text" value="${(it.wood||'').replace(/"/g,'&quot;')}" onchange="inv_updateField(${i},'wood',this.value)" placeholder="wood…"></span></td>
-        <td><input class="editable" type="number" value="${it.qty}" min="1" onchange="inv_updateQty(${i},this.value)"></td>
+        <td><span class="inv-qty-wrap" data-val="${it.qty}"><input class="editable" type="number" value="${it.qty}" min="1" onchange="inv_updateQty(${i},this.value)"></span></td>
         <td class="nowrap">${basePriceCell}</td>
         ${hasAnyDiscount ? `<td class="nowrap">${offerPriceCell}</td>` : ''}
         <td class="right" style="font-size:12px;font-weight:500">₹${total.toLocaleString('en-IN')}</td>
