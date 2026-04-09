@@ -272,19 +272,20 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
 #pane-invoice .website-badge { display:inline-block; font-size:8px; padding:1px 5px; border-radius:8px; background:#e8f4e8; color:#4a7a4a; margin-left:4px; vertical-align:middle; }
 @page { margin: 10mm; }
 @media print {
-  /* Step 1: hide everything */
+  /* Hide everything at every level */
   body > * { display:none !important; }
-  /* Step 2: show the entire parent chain down to invoiceEl */
   body > #main-app { display:block !important; }
+  #main-app > * { display:none !important; }
   #main-app > #pane-invoice { display:block !important; }
+  #pane-invoice > * { display:none !important; }
   #pane-invoice > #inv-app-inner { display:block !important; }
-  #inv-app-inner > aside { display:none !important; }
+  #inv-app-inner > * { display:none !important; }
   #inv-app-inner > main.main { display:block !important; padding:0 !important; background:#fff !important; overflow:visible !important; }
   main.main > * { display:none !important; }
   main.main > #invoiceEl { display:block !important; }
   #invoiceEl * { display:revert !important; }
   #pane-invoice .invoice { border:none !important; padding:0 !important; box-shadow:none !important; max-width:100% !important; }
-  /* Force all containers to shrink to invoice content only */
+  /* Shrink containers to content */
   html, body { height:auto !important; overflow:visible !important; }
   #main-app, #pane-invoice, #inv-app-inner, main.main { height:auto !important; min-height:0 !important; overflow:visible !important; }
   /* Fix table for print — auto layout so columns size to content */
@@ -3581,8 +3582,12 @@ function inv_printAndIncrement() {
   // Grab just the invoice HTML
   const invoiceHTML = document.getElementById('invoiceEl').innerHTML;
 
-  // Collect invoice-relevant CSS only (the .invoice class styles)
-  const styles = Array.from(document.querySelectorAll('style')).map(s=>s.innerHTML).join('\n');
+  // Collect styles, stripping #pane-invoice prefix so they work standalone
+  const rawStyles = Array.from(document.querySelectorAll('style')).map(s=>s.innerHTML).join('\n');
+  const styles = rawStyles
+    .replace(/#pane-invoice /g, '')
+    .replace(/#main-app[^{,]*/g, 'body')
+    .replace(/@media print[^}]*\{[^§]*?\}/gs, ''); // strip print media queries
 
   // Build standalone page
   const html = `<!DOCTYPE html>
@@ -3594,7 +3599,7 @@ function inv_printAndIncrement() {
 <style>
 ${styles}
 html, body { margin:0; padding:0; background:#fff; }
-body { padding: 12px; }
+body { padding: 16px; }
 @page { margin: 10mm; }
 </style>
 </head>
