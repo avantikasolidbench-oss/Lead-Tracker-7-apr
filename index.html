@@ -807,7 +807,7 @@ const mk=d=>{if(!d)return`${new Date().getFullYear()}-${String(new Date().getMon
 // ── STORAGE ───────────────────────────────────────────────────
 const lSave=()=>localStorage.setItem("leads-v5",JSON.stringify(leads));
 const cSave=()=>localStorage.setItem("costing-v2",JSON.stringify(costing));
-const invSave=()=>{try{localStorage.setItem("invoices-v1",JSON.stringify(savedInvoices));}catch(e){if(e.name==="QuotaExceededError")alert("Storage full — consider removing old invoices.");}}
+const invSave=()=>{try{localStorage.removeItem("invoices-v1");}catch{}} // invoices in Sheets only
 function invSaveToSheets(inv){
   // Strip base64 images — only keep URL-based images (catalog items)
   const stripped={...inv,items:(inv.items||[]).map(it=>({
@@ -819,7 +819,7 @@ function invSaveToSheets(inv){
 function invDeleteFromSheets(id){
   sPost({action:"deleteInvoice",id}).catch(()=>{});
 }
-const invLoad=()=>{try{const d=localStorage.getItem("invoices-v1");if(d)savedInvoices=JSON.parse(d);}catch{}};
+const invLoad=()=>{try{localStorage.removeItem("invoices-v1");}catch{}}; // invoices loaded from Sheets only
 const lLoad=()=>{try{const d=localStorage.getItem("leads-v5");if(d)leads=JSON.parse(d);}catch{}};
 const cLoad=()=>{try{const d=localStorage.getItem("costing-v2");if(d)costing=JSON.parse(d);}catch{}};
 
@@ -4205,7 +4205,7 @@ function inv_saveToList(){
     invNum:inv_getInvoiceNumberStr(),
     date:new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
     invoiceNumber:{...invoiceNumber},
-    items:invoiceItems,
+    items:invoiceItems.map(it=>({...it,img:it.img&&it.img.startsWith('http')?it.img:''})), // strip base64 images
     freight:document.getElementById('freightAmt')?.value||'',
     billName:inv_g('billName'), billAddr1:inv_g('billAddr1'), billAddr2:inv_g('billAddr2'),
     billState:inv_g('billState'), billGstin:inv_g('billGstin'),
