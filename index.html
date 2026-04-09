@@ -3528,31 +3528,32 @@ function inv_updateTotals() {
 }
 
 function inv_saveInvoiceHTML() {
-  const strippedItems=invoiceItems.map(it=>({...it,img:it.img&&it.img.startsWith('http')?it.img:''}));
-  const state = {
-    items: strippedItems,
-    freight: document.getElementById('freightAmt').value,
-    billName: inv_g('billName'), billAddr1: inv_g('billAddr1'), billAddr2: inv_g('billAddr2'),
-    billState: inv_g('billState'), billGstin: inv_g('billGstin'),
-    shipName: inv_g('shipName'), shipAddr1: inv_g('shipAddr1'), shipAddr2: inv_g('shipAddr2'),
-    shipState: inv_g('shipState'),
-    invoiceNumber: invoiceNumber
-  };
-  let stateTag = document.getElementById('sb-state');
-  const wasNew = !stateTag;
-  if (wasNew) {
-    stateTag = document.createElement('script');
-    stateTag.id = 'sb-state';
-    stateTag.type = 'application/json';
-    document.body.appendChild(stateTag);
-  }
-  stateTag.textContent = JSON.stringify(state);
-  const src = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-  if (wasNew) stateTag.remove();
   const clientName = inv_g('billName').trim() || 'Invoice';
-  const invNum = inv_getInvoiceNumberStr().replace(/\//g, '-');
+  const invNum = inv_getInvoiceNumberStr().replace(/\/\//g, '-').replace(/\//g, '-');
   const filename = `${invNum} ${clientName}.html`;
-  // Safari-compatible download
+
+  // Collect styles
+  const styles = Array.from(document.querySelectorAll('style')).map(s=>s.innerHTML).join('\n');
+
+  // Build standalone invoice-only HTML
+  const invoiceHTML = document.getElementById('invoiceEl').innerHTML;
+  const src = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${invNum} ${clientName}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+${styles}
+body { margin: 0; padding: 20px; background: #fff; }
+@page { margin: 10mm; }
+</style>
+</head>
+<body>
+<div class="invoice">${invoiceHTML}</div>
+</body>
+</html>`;
+
   try {
     const blob = new Blob([src], {type: 'text/html'});
     const url = URL.createObjectURL(blob);
@@ -3562,11 +3563,9 @@ function inv_saveInvoiceHTML() {
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   } catch(e) {
-    // Fallback: open in new tab for manual save
     const w = window.open('', '_blank');
     w.document.write(src);
     w.document.close();
-    alert('Safari: use File → Save As in the new tab to save as "' + filename + '"');
   }
 }
 
