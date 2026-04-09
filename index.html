@@ -276,6 +276,8 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   body > * { display:none !important; }
   body > #main-app { display:block !important; }
   #main-app > * { display:none !important; }
+  #main-app > .topbar { display:none !important; }
+  .topbar { display:none !important; }
   #main-app > #pane-invoice { display:block !important; }
   #pane-invoice > * { display:none !important; }
   #pane-invoice > #inv-app-inner { display:block !important; }
@@ -315,6 +317,7 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #pane-invoice .inv-name-wrap::before { content:attr(data-val); font-weight:500; font-size:11px; white-space:normal; word-break:break-word; display:block; }
   #pane-invoice .inv-dims-wrap::before { content:attr(data-val); font-size:10px; color:#7a7060; white-space:normal; word-break:break-word; display:block; }
   #pane-invoice .inv-wood-wrap::before { content:attr(data-val); font-size:11px; white-space:normal; word-break:break-word; display:block; }
+  .no-print { display:none !important; }
   #pane-invoice .no-print { display:none !important; }
   #pane-invoice .print-only { display:inline !important; }
   /* Offer price: hide input+prefix span, show formatted value from data attribute */
@@ -380,7 +383,7 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
 
 <!-- MAIN APP (hidden until logged in) -->
 <div id="main-app" class="hidden">
-<div class="topbar">
+<div class="topbar no-print">
   <div class="topbar-inner">
     <div>
       <h1>Lead Tracker</h1>
@@ -3582,14 +3585,20 @@ function inv_printAndIncrement() {
   // Grab just the invoice HTML
   const invoiceHTML = document.getElementById('invoiceEl').innerHTML;
 
-  // Collect styles, stripping #pane-invoice prefix so they work standalone
-  const rawStyles = Array.from(document.querySelectorAll('style')).map(s=>s.innerHTML).join('\n');
-  const styles = rawStyles
-    .replace(/#pane-invoice /g, '')
-    .replace(/#main-app[^{,]*/g, 'body')
-    .replace(/@media print[^}]*\{[^§]*?\}/gs, ''); // strip print media queries
+  // Extract only the invoice-specific CSS rules we need
+  // Get CSS custom properties (variables) from the style tag
+  const allStyles = Array.from(document.querySelectorAll('style')).map(s=>s.innerHTML).join('\n');
+  // Extract :root variables
+  const rootVars = (allStyles.match(/:root\s*\{[^}]+\}/g) || []).join('\n');
+  // Extract rules that contain "inv-" (invoice-specific)
+  const invRules = allStyles
+    .replace(/#pane-invoice\s*/g, '')
+    .split('}')
+    .filter(r => r.includes('.inv') || r.includes('.invoice') || r.includes('.totals') || r.includes('.no-print') || r.includes('.print-only'))
+    .map(r => r + '}')
+    .join('\n');
 
-  // Build standalone page
+  // Build standalone print-ready page
   const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -3597,23 +3606,39 @@ function inv_printAndIncrement() {
 <title>${clientName} - ${today}</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-${styles}
-html, body { margin:0; padding:0; background:#fff; }
-body { padding: 16px; }
+${rootVars}
+${invRules}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:#fff; font-family:'DM Sans',sans-serif; color:#1a1410; }
 @page { margin: 10mm; }
+/* Hide interactive elements */
+.no-print { display:none !important; }
+input, button, a { display:none !important; }
+/* Show print-only spans */
+.print-only { display:inline !important; }
+/* Inline wrapper display values */
+.inv-name-wrap, .inv-dims-wrap, .inv-wood-wrap, .inv-offer-wrap { display:block; }
+.inv-name-wrap::before { content:attr(data-val); font-weight:500; font-size:11px; display:block; }
+.inv-dims-wrap::before { content:attr(data-val); font-size:10px; color:#7a7060; display:block; }
+.inv-wood-wrap::before { content:attr(data-val); font-size:11px; display:block; }
+.inv-offer-wrap::before { content:attr(data-val); color:#c4922a; font-weight:500; font-size:12px; }
 </style>
 </head>
 <body>
 <div class="invoice">${invoiceHTML}</div>
+<script>
+window.onload = function() {
+  // Small delay to let fonts load
+  setTimeout(function() { window.print(); }, 800);
+};
+<\/script>
 </body>
 </html>`;
 
   const blob = new Blob([html], {type:'text/html'});
   const url = URL.createObjectURL(blob);
   const pw = window.open(url, '_blank', 'width=900,height=700');
-  // Let user print manually from the new window (Cmd+P)
-  // Clean up blob url after a minute
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  setTimeout(() => URL.revokeObjectURL(url), 120000);
 
   invoiceNumber.seq += 1;
   inv_saveInvoiceNumber();
