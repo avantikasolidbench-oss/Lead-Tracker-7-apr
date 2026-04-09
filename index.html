@@ -326,8 +326,16 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #pane-invoice .inv-offer-wrap::before { content:attr(data-val); color:#c4922a; font-weight:500; font-size:12px; }
 .inv-qty-wrap input { display:none !important; }
 .inv-qty-wrap::before { content:attr(data-val); font-size:12px; }
+.inv-freight-wrap input { display:none !important; }
+.inv-freight-wrap::before { content:attr(data-val); font-size:12px; }
+.inv-baseprice-wrap > div { display:none !important; }
+.inv-baseprice-wrap::before { content:attr(data-val); font-size:12px; }
   #pane-invoice .inv-qty-wrap input { display:none !important; }
   #pane-invoice .inv-qty-wrap::before { content:attr(data-val); font-size:12px; }
+  #pane-invoice .inv-freight-wrap input { display:none !important; }
+  #pane-invoice .inv-freight-wrap::before { content:attr(data-val); font-size:12px; }
+  #pane-invoice .inv-baseprice-wrap > div { display:none !important; }
+  #pane-invoice .inv-baseprice-wrap::before { content:attr(data-val); font-size:12px; }
   #pane-invoice .item-sub a { display:none !important; }
   /* Totals block */
   #pane-invoice .inv-footer-row { page-break-inside:avoid; }
@@ -338,6 +346,10 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #invoiceEl .inv-addresses { display:grid !important; grid-template-columns:1fr 1fr !important; gap:20px !important; margin-bottom:16px !important; }
   #invoiceEl .inv-footer-row { display:flex !important; justify-content:flex-end !important; gap:40px !important; align-items:flex-start !important; }
   #invoiceEl .totals-block { min-width:200px !important; text-align:left !important; }
+  #invoiceEl .totals-block .totals-row { display:flex !important; justify-content:space-between !important; align-items:baseline !important; padding:4px 0 !important; font-size:12px !important; gap:40px !important; white-space:nowrap !important; }
+  #invoiceEl .totals-block .totals-row span { display:inline !important; }
+  #invoiceEl .totals-block .totals-row.grand { border-top:2px solid #1a1410 !important; margin-top:6px !important; padding-top:8px !important; font-size:13px !important; font-weight:600 !important; }
+  #invoiceEl .freight-inline-wrap { display:inline !important; }
   #invoiceEl .inv-meta { text-align:right !important; }
 }
 </style>
@@ -4048,7 +4060,7 @@ function inv_renderInvoice(){
       const imgHtml = it.img
         ? `<img class="item-thumb" src="${it.img}" onerror="this.style.display='none'">`
         : `<div class="item-thumb-placeholder">▭</div>`;
-      const basePriceCell = `<div style="display:inline-flex;align-items:center;gap:1px"><span style="font-size:12px;color:var(--inv-ink)">₹</span><input class="editable" type="number" value="${it.price}" onchange="inv_updatePrice(${i},this.value)" title="Base price" style="width:70px"></div>`;
+      const basePriceCell = `<span class="inv-baseprice-wrap" data-val="₹${it.price.toLocaleString('en-IN')}"><div style="display:inline-flex;align-items:center;gap:1px"><span style="font-size:12px;color:var(--inv-ink)">₹</span><input class="editable" type="number" value="${it.price}" onchange="inv_updatePrice(${i},this.value)" title="Base price" style="width:70px"></div></span>`;
       const offerPriceCell = it.hasDiscount
         ? `<span class="inv-offer-wrap" data-val="₹${it.offeredPrice.toLocaleString('en-IN')}">
              <div style="display:inline-flex;align-items:center;gap:1px"><span style="font-size:12px;color:var(--inv-accent)">₹</span><input class="editable price-offered" type="number" value="${it.offeredPrice}" onchange="inv_updateOffered(${i},this.value)" title="Offer price" style="width:70px;color:var(--inv-accent)"></div>
@@ -4109,7 +4121,7 @@ function inv_renderInvoice(){
     <div class="inv-footer-row">
       <div class="totals-block">
         <div class="totals-row"><span>Subtotal</span><span>₹${subtotal.toLocaleString('en-IN')}</span></div>
-        <div class="totals-row"><span>Freight</span><span class="freight-inline-wrap">₹<input class="freight-inline-input" type="number" id="freightAmtInline" value="${freight||''}" placeholder="0" oninput="document.getElementById('freightAmt').value=this.value;inv_updateTotals()" min="0"></span></div>
+        <div class="totals-row"><span>Freight</span><span class="freight-inline-wrap"><span class="inv-freight-wrap" data-val="₹${freight||0}">₹<input class="freight-inline-input" type="number" id="freightAmtInline" value="${freight||''}" placeholder="0" oninput="document.getElementById('freightAmt').value=this.value;inv_updateTotals()" min="0"></span></span></div>
         <div class="totals-row"><span>GST – 18%</span><span>₹${gst.toLocaleString('en-IN')}</span></div>
         <div class="totals-row grand"><span>Grand Total</span><span>₹${grand.toLocaleString('en-IN')}</span></div>
         <div class="amount-words">${inv_toWords(grand)}</div>
