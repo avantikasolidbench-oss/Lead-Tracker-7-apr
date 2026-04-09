@@ -1954,7 +1954,22 @@ function updSWRow(i,f,v){
   const cr=document.getElementById('sw-cost-ref');if(cr)cr.textContent=rupee(c.costRef);
   renderCostingSummary();
 }
-function addSWRow(){const S=getCS();if(!S)return;if(!S.solidWood)S.solidWood=defaultSolidWood();S.solidWood.rows.push({id:Math.random(),label:"",l:"",w:"",t:"",qty:1});saveCS();renderSolidWoodRows();renderSolidWoodCalc();}
+function addSWRow(){
+  const S=getCS();if(!S)return;
+  if(!S.solidWood)S.solidWood=defaultSolidWood();
+  // Flush any in-progress DOM input values into state before re-rendering
+  document.querySelectorAll('[data-swrow]').forEach((tr,i)=>{
+    const r=S.solidWood.rows[i];if(!r)return;
+    const inputs=tr.querySelectorAll('input');
+    if(inputs[0])r.label=inputs[0].value;
+    if(inputs[1])r.l=inputs[1].value;
+    if(inputs[2])r.w=inputs[2].value;
+    if(inputs[3])r.t=inputs[3].value;
+    if(inputs[4])r.qty=inputs[4].value;
+  });
+  S.solidWood.rows.push({id:Math.random(),label:'',l:'',w:'',t:'',qty:1});
+  saveCS();renderSolidWoodRows();renderSolidWoodCalc();
+}
 function delSWRow(i){const S=getCS();if(!S)return;S.solidWood.rows.splice(i,1);saveCS();renderSolidWoodRows();renderSolidWoodCalc();}
 
 // ── HARDWARE: text inputs update totals only; dropdown re-renders row ──
@@ -2052,6 +2067,19 @@ function delCS(id){
   costing=costing.filter(s=>s.id!==id);
   activeCost=costing.length?costing[0].id:null;
   cSave();schedDeleteCosting(id);
+  renderCosting();
+}
+function dupCS(id){
+  const src=costing.find(s=>s.id===id);if(!src)return;
+  const newName=prompt("Name for duplicated sheet:",src.name+" (Copy)");
+  if(!newName)return;
+  const copy=JSON.parse(JSON.stringify(src));
+  copy.id=nextCostId++;
+  copy.name=newName;
+  copy.createdAt=new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
+  copy.savedCostRef=null;copy.savedAt="";
+  costing.unshift(copy);activeCost=copy.id;
+  cSave();sPost({action:"saveCosting",sheet:flattenForSheets(copy)}).catch(()=>{});
   renderCosting();
 }
 function saveCR(){
@@ -2545,6 +2573,7 @@ function buildLibraryRows(){
           </div>
           <span style="font-size:12px;color:#64748B;white-space:nowrap">${grand>0?rupee(grand):'—'}</span>
           <span style="font-size:12px;font-weight:700;color:${s.savedCostRef?'#166534':'#94A3B8'};white-space:nowrap">${s.savedCostRef?'✓ '+rupee(s.savedCostRef):'Not saved'}</span>
+          <button onclick="event.stopPropagation();dupCS(${s.id})" style="background:none;border:none;cursor:pointer;color:#94A3B8;font-size:13px;padding:0 2px;line-height:1" title="Duplicate">⧉</button>
           <button onclick="event.stopPropagation();delCS(${s.id})" style="background:none;border:none;cursor:pointer;color:#E2E8F0;font-size:16px;padding:0 2px;line-height:1" title="Delete">×</button>
         </div>`;
       }).join('')}
@@ -3569,6 +3598,16 @@ function inv_saveInvoiceHTML() {
   // Collect styles
   const styles = Array.from(document.querySelectorAll('style')).map(s=>s.innerHTML).join('\n');
 
+  // Build state snapshot for reload (keep base64 images so custom uploads restore)
+  const state = {
+    items: invoiceItems,
+    freight: document.getElementById('freightAmt').value,
+    billName: inv_g('billName'), billAddr1: inv_g('billAddr1'), billAddr2: inv_g('billAddr2'),
+    billState: inv_g('billState'), billGstin: inv_g('billGstin'),
+    shipName: inv_g('shipName'), shipAddr1: inv_g('shipAddr1'), shipAddr2: inv_g('shipAddr2'),
+    shipState: inv_g('shipState'), invoiceNumber: invoiceNumber
+  };
+
   // Build standalone invoice-only HTML
   const invoiceHTML = document.getElementById('invoiceEl').innerHTML;
   const src = `<!DOCTYPE html>
@@ -3585,6 +3624,7 @@ body { margin: 0; padding: 20px; background: #fff; }
 </head>
 <body>
 <div class="invoice">${invoiceHTML}</div>
+<script id="sb-state" type="application/json">${JSON.stringify(state)}<\/script>
 </body>
 </html>`;
 
@@ -4205,6 +4245,7 @@ function inv_renderLibrary(){
         </select>
         <button onclick="inv_loadSaved('${s.id}')" style="background:#f0ebe0;border:none;border-radius:4px;padding:3px 8px;font-size:11px;color:#7a6e5f;cursor:pointer">Open</button>
         <button onclick="inv_assignLead('${s.id}','');this.closest('div').querySelector('select').value=''" style="background:none;border:none;cursor:pointer;color:#d4c9b0;font-size:11px;padding:0 2px" title="Unlink">✕</button>
+        <button onclick="inv_dupSaved('${s.id}')" style="background:none;border:none;cursor:pointer;color:#94A3B8;font-size:13px;padding:0 4px" title="Duplicate">⧉</button>
         <button onclick="if(confirm('Delete this invoice?')){savedInvoices=savedInvoices.filter(x=>x.id!='${s.id}');invSave();inv_renderSavedList();}" style="background:none;border:none;cursor:pointer;color:#E2E8F0;font-size:16px;padding:0 2px">×</button>
       </div>`;
     }).join('');
@@ -4318,6 +4359,31 @@ function inv_loadSaved(id){
   inv_renderInvoice();
   inv_switchTab('details');
   if(delBtn)delBtn.style.display='';
+}
+
+function inv_dupSaved(id){
+  const src=savedInvoices.find(s=>String(s.id)===String(id));if(!src)return;
+  // Ask for new client name
+  const newClient=prompt("Client name for duplicated invoice:",src.clientName+" (Copy)");
+  if(newClient===null)return;
+  // Ask for lead ref
+  const newLeadRef=prompt("Link to lead (enter lead/client name, or leave blank):",src.leadRef||'');
+  if(newLeadRef===null)return;
+  const copy=JSON.parse(JSON.stringify(src));
+  copy.id=nextInvId++;
+  copy.clientName=newClient||src.clientName;
+  copy.leadRef=newLeadRef||'';
+  copy.date=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  // Give a new invoice number (increment seq)
+  copy.invoiceNumber={...src.invoiceNumber, seq:(src.invoiceNumber?.seq||0)+1};
+  copy.invNum=copy.invoiceNumber.prefix+(copy.invoiceNumber.yr||'')+'/'+String(copy.invoiceNumber.seq).padStart(3,'0');
+  savedInvoices.unshift(copy);
+  invSave();
+  invSaveToSheets(copy);
+  inv_renderLibrary();
+  // Load the duplicate for editing
+  inv_loadSaved(copy.id);
+  alert("Invoice duplicated. Update the billing details as needed.");
 }
 
 function inv_deleteSaved(){
