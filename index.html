@@ -271,16 +271,11 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
 #pane-invoice .tag { display:inline-block; font-size:9px; padding:1px 6px; border-radius:8px; background:var(--inv-light); color:var(--inv-muted); margin-top:2px; white-space:normal; word-break:break-word; overflow-wrap:break-word; max-width:100%; }
 #pane-invoice .website-badge { display:inline-block; font-size:8px; padding:1px 5px; border-radius:8px; background:#e8f4e8; color:#4a7a4a; margin-left:4px; vertical-align:middle; }
 @media print {
-  /* Hide everything except the invoice */
-  .topbar, .tabs, .filters, .freight-card, .remove-btn,
-  #main-app > .topbar, #main-app > div > .tabs,
-  #pane-leads, #pane-won, #pane-lost, #pane-costing, #pane-analytics,
-  #pane-invoice .sidebar, #pane-invoice .toolbar,
-  #pane-invoice .modal-overlay { display:none !important; }
-  /* Nuclear option — hide main-app, show only the invoice */
-  #main-app { visibility:hidden !important; }
-  #pane-invoice, #pane-invoice * { visibility:visible !important; }
-  #pane-invoice { position:fixed !important; top:0 !important; left:0 !important; width:100% !important; }
+  /* Hide everything — only show the invoice element */
+  body * { visibility:hidden !important; }
+  #invoiceEl, #invoiceEl * { visibility:visible !important; }
+  #invoiceEl { position:fixed !important; top:0 !important; left:0 !important; width:100% !important; }
+  #pane-invoice { display:block !important; }
   /* Invoice layout */
   body { margin:0 !important; }
   #inv-app-inner { display:block !important; }
@@ -3532,8 +3527,9 @@ function inv_updateTotals() {
 }
 
 function inv_saveInvoiceHTML() {
+  const strippedItems=invoiceItems.map(it=>({...it,img:it.img&&it.img.startsWith('http')?it.img:''}));
   const state = {
-    items: invoiceItems,
+    items: strippedItems,
     freight: document.getElementById('freightAmt').value,
     billName: inv_g('billName'), billAddr1: inv_g('billAddr1'), billAddr2: inv_g('billAddr2'),
     billState: inv_g('billState'), billGstin: inv_g('billGstin'),
@@ -3579,8 +3575,9 @@ function inv_printAndIncrement() {
   const origTitle = document.title;
   document.title = clientName + ' - ' + today;
   // Embed state snapshot so the PDF can be re-loaded later
+  const strippedItems=invoiceItems.map(it=>({...it,img:it.img&&it.img.startsWith('http')?it.img:''}));
   const state = {
-    items: invoiceItems,
+    items: strippedItems,
     freight: document.getElementById('freightAmt').value,
     billName: inv_g('billName'), billAddr1: inv_g('billAddr1'), billAddr2: inv_g('billAddr2'),
     billState: inv_g('billState'), billGstin: inv_g('billGstin'),
@@ -4445,7 +4442,7 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
     <select id="inv-saved-list" onchange="inv_loadSaved(this.value)" style="display:none"></select>
 
     <!-- All Invoices Library -->
-    <div id="inv-library-wrap"></div>
+    <div id="inv-library-wrap" class="no-print"></div>
   </div>
 </main>
 <!-- CUSTOM ITEM MODAL -->
