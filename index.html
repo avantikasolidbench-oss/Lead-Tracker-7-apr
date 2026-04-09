@@ -3573,41 +3573,28 @@ function inv_saveInvoiceHTML() {
 function inv_printAndIncrement() {
   const clientName = document.getElementById('billName').value.trim() || 'Invoice';
   const today = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-  const origTitle = document.title;
-  document.title = clientName + ' - ' + today;
-  // Embed state snapshot so the PDF can be re-loaded later
-  const strippedItems=invoiceItems.map(it=>({...it,img:it.img&&it.img.startsWith('http')?it.img:''}));
-  const state = {
-    items: strippedItems,
-    freight: document.getElementById('freightAmt').value,
-    billName: inv_g('billName'), billAddr1: inv_g('billAddr1'), billAddr2: inv_g('billAddr2'),
-    billState: inv_g('billState'), billGstin: inv_g('billGstin'),
-    shipName: inv_g('shipName'), shipAddr1: inv_g('shipAddr1'), shipAddr2: inv_g('shipAddr2'),
-    shipState: inv_g('shipState'),
-    invoiceNumber: invoiceNumber
-  };
-  let stateTag = document.getElementById('sb-state');
-  if (!stateTag) {
-    stateTag = document.createElement('script');
-    stateTag.id = 'sb-state';
-    stateTag.type = 'application/json';
-    document.body.appendChild(stateTag);
-  }
-  stateTag.textContent = JSON.stringify(state);
-  // Clear heavy DOM before printing to prevent Chrome PDF hang
-  const catalogEl = document.getElementById('catalogList');
-  const catalogBak = catalogEl ? catalogEl.innerHTML : '';
-  if(catalogEl) catalogEl.innerHTML = '';
-  const libEl = document.getElementById('inv-library-wrap');
-  const libBak = libEl ? libEl.innerHTML : '';
-  if(libEl) libEl.innerHTML = '';
-  setTimeout(() => {
-    window.print();
-    document.title = origTitle;
-    // Restore after print dialog closes
-    if(catalogEl) catalogEl.innerHTML = catalogBak;
-    if(libEl) libEl.innerHTML = libBak;
-  }, 100);
+
+  // Grab just the invoice HTML
+  const invoiceHTML = document.getElementById('invoiceEl').innerHTML;
+
+  // Collect all <style> tags from current page
+  const styles = Array.from(document.querySelectorAll('style')).map(s=>s.outerHTML).join('\n');
+
+  // Open a clean print window with just the invoice
+  const pw = window.open('','_blank','width=900,height=700');
+  pw.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>${clientName} - ${today}</title>
+    ${styles}
+    <style>
+      body { margin: 0; padding: 20px; background: #fff; font-family: 'DM Sans', sans-serif; }
+      @page { margin: 10mm; }
+    </style>
+  </head><body>
+    <div class="invoice">${invoiceHTML}</div>
+    <script>window.onload=function(){window.print();window.close();}<\/script>
+  </body></html>`);
+  pw.document.close();
+
   invoiceNumber.seq += 1;
   inv_saveInvoiceNumber();
   inv_renderInvoice();
