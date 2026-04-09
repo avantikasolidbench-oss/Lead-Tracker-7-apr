@@ -284,6 +284,9 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   main.main > #invoiceEl { display:block !important; }
   #invoiceEl * { display:revert !important; }
   #pane-invoice .invoice { border:none !important; padding:0 !important; box-shadow:none !important; max-width:100% !important; }
+  /* Force all containers to shrink to invoice content only */
+  html, body { height:auto !important; overflow:visible !important; }
+  #main-app, #pane-invoice, #inv-app-inner, main.main { height:auto !important; min-height:0 !important; overflow:visible !important; }
   /* Fix table for print — auto layout so columns size to content */
   #pane-invoice .inv-table { table-layout:auto !important; width:100% !important; }
   #pane-invoice .inv-table th,
@@ -3578,23 +3581,34 @@ function inv_printAndIncrement() {
   // Grab just the invoice HTML
   const invoiceHTML = document.getElementById('invoiceEl').innerHTML;
 
-  // Collect all <style> tags from current page
-  const styles = Array.from(document.querySelectorAll('style')).map(s=>s.outerHTML).join('\n');
+  // Collect invoice-relevant CSS only (the .invoice class styles)
+  const styles = Array.from(document.querySelectorAll('style')).map(s=>s.innerHTML).join('\n');
 
-  // Open a clean print window with just the invoice
-  const pw = window.open('','_blank','width=900,height=700');
-  pw.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
-    <title>${clientName} - ${today}</title>
-    ${styles}
-    <style>
-      body { margin: 0; padding: 20px; background: #fff; font-family: 'DM Sans', sans-serif; }
-      @page { margin: 10mm; }
-    </style>
-  </head><body>
-    <div class="invoice">${invoiceHTML}</div>
-    <script>window.onload=function(){window.print();window.close();}<\/script>
-  </body></html>`);
-  pw.document.close();
+  // Build standalone page
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${clientName} - ${today}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+${styles}
+html, body { margin:0; padding:0; background:#fff; }
+body { padding: 12px; }
+@page { margin: 10mm; }
+</style>
+</head>
+<body>
+<div class="invoice">${invoiceHTML}</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const pw = window.open(url, '_blank', 'width=900,height=700');
+  // Let user print manually from the new window (Cmd+P)
+  // Clean up blob url after a minute
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 
   invoiceNumber.seq += 1;
   inv_saveInvoiceNumber();
