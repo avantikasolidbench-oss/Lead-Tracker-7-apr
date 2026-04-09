@@ -1306,8 +1306,8 @@ function renderMonthlySummary(){
   const now=new Date();
   const thisMonth=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
   const monthLabel=now.toLocaleString("default",{month:"long",year:"numeric"});
-  const wonThisMonth=leads.filter(l=>{if(resolveStage(l)!=="Won")return false;const d=l.closedDate||l.createdAt||"";return d.startsWith(thisMonth);});
-  const lostThisMonth=leads.filter(l=>{if(resolveStage(l)!=="Lost")return false;const d=l.closedDate||l.createdAt||"";return d.startsWith(thisMonth);});
+  const wonThisMonth=leads.filter(l=>{if(resolveStage(l)!=="Won")return false;const d=l.closedDate||"";return d.startsWith(thisMonth);});
+  const lostThisMonth=leads.filter(l=>{if(resolveStage(l)!=="Lost")return false;const d=l.closedDate||"";return d.startsWith(thisMonth);});
   if(!wonThisMonth.length&&!lostThisMonth.length){el.innerHTML="";return;}
   const wonVal=wonThisMonth.reduce((a,l)=>a+(Number(l.value)||0),0);
   const lostVal=lostThisMonth.reduce((a,l)=>a+(Number(l.value)||0),0);
@@ -1341,14 +1341,14 @@ function renderMonthlySummary(){
   // Won this month
   const wonThisMonth=leads.filter(l=>{
     if(resolveStage(l)!=="Won")return false;
-    const d=l.closedDate||l.createdAt||"";
+    const d=l.closedDate||"";
     return d.startsWith(thisMonth);
   });
 
   // Lost this month
   const lostThisMonth=leads.filter(l=>{
     if(resolveStage(l)!=="Lost")return false;
-    const d=l.closedDate||l.createdAt||"";
+    const d=l.closedDate||"";
     return d.startsWith(thisMonth);
   });
 
