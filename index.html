@@ -329,6 +329,12 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #pane-invoice .inv-footer-row { page-break-inside:avoid; }
   #pane-invoice .inv-table { page-break-inside:auto; }
   #pane-invoice .inv-table tr { page-break-inside:avoid; }
+  /* Fix layouts that depend on flex/grid — must come AFTER display:revert */
+  #invoiceEl .inv-header { display:flex !important; justify-content:space-between !important; align-items:flex-start !important; }
+  #invoiceEl .inv-addresses { display:grid !important; grid-template-columns:1fr 1fr !important; gap:20px !important; margin-bottom:16px !important; }
+  #invoiceEl .inv-footer-row { display:flex !important; justify-content:flex-end !important; gap:40px !important; align-items:flex-start !important; }
+  #invoiceEl .totals-block { min-width:200px !important; text-align:left !important; }
+  #invoiceEl .inv-meta { text-align:right !important; }
 }
 </style>
 </head>
