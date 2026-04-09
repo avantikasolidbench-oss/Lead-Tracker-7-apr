@@ -270,19 +270,13 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
 #pane-invoice .modal-actions { display:flex; gap:8px; margin-top:18px; justify-content:flex-end; }
 #pane-invoice .tag { display:inline-block; font-size:9px; padding:1px 6px; border-radius:8px; background:var(--inv-light); color:var(--inv-muted); margin-top:2px; white-space:normal; word-break:break-word; overflow-wrap:break-word; max-width:100%; }
 #pane-invoice .website-badge { display:inline-block; font-size:8px; padding:1px 5px; border-radius:8px; background:#e8f4e8; color:#4a7a4a; margin-left:4px; vertical-align:middle; }
-@page { margin: 0; }
+@page { margin: 10mm; }
 @media print {
   /* Hide everything — only show the invoice element */
-  body * { visibility:hidden !important; }
-  #invoiceEl, #invoiceEl * { visibility:visible !important; }
-  #invoiceEl { position:fixed !important; top:0 !important; left:0 !important; width:100% !important; }
-  #pane-invoice { display:block !important; }
-  /* Invoice layout */
-  body { margin:0 !important; }
-  #inv-app-inner { display:block !important; }
-  #pane-invoice { display:block !important; }
-  #pane-invoice .main { padding:0 !important; background:#fff !important; overflow:visible !important; }
-  #pane-invoice .invoice { border:none !important; padding:12px !important; box-shadow:none !important; max-width:100% !important; }
+  body * { display:none !important; }
+  #invoiceEl { display:block !important; position:static !important; width:100% !important; }
+  #invoiceEl * { display:revert !important; }
+  #pane-invoice .invoice { border:none !important; padding:0 !important; box-shadow:none !important; max-width:100% !important; }
   /* Fix table for print — auto layout so columns size to content */
   #pane-invoice .inv-table { table-layout:auto !important; width:100% !important; }
   #pane-invoice .inv-table th,
@@ -319,7 +313,8 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #pane-invoice .item-sub a { display:none !important; }
   /* Totals block */
   #pane-invoice .inv-footer-row { page-break-inside:avoid; }
-  #pane-invoice .invoice { page-break-inside:avoid; }
+  #pane-invoice .inv-table { page-break-inside:auto; }
+  #pane-invoice .inv-table tr { page-break-inside:avoid; }
 }
 </style>
 </head>
