@@ -290,8 +290,11 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   /* ── STEP 3: Invoice layout — mirror screen styles exactly ── */
   #invoiceEl { display:block !important; }
   #invoiceEl * { display:revert !important; }
-  /* Invoice container */
-  #invoiceEl.invoice, #invoiceEl .invoice { border:none !important; padding:0 !important; box-shadow:none !important; max-width:100% !important; background:#fff !important; }
+  /* Invoice container — remove box, center on page */
+  #invoiceEl.invoice, #invoiceEl .invoice { border:none !important; outline:none !important; padding:0 !important; box-shadow:none !important; max-width:100% !important; background:#fff !important; }
+  #invoiceEl { margin:0 auto !important; }
+  /* Remove any outline/border from parent containers */
+  #pane-invoice, #inv-app-inner, main.main { border:none !important; outline:none !important; box-shadow:none !important; }
   /* Header: logo left, invoice type right */
   #invoiceEl .inv-header { display:flex !important; justify-content:space-between !important; align-items:center !important; padding-bottom:18px !important; margin-bottom:22px !important; border-bottom:2px solid #1a1410 !important; color:#1a1410 !important; }
   #invoiceEl .inv-type { font-size:14px !important; font-weight:600 !important; letter-spacing:1px !important; text-transform:uppercase !important; text-align:right !important; }
@@ -3669,7 +3672,7 @@ ${invRules}
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin:0; padding:0; background:#fff; font-family:'DM Sans',sans-serif; color:#1a1410; }
 /* Hard-coded invoice variables for standalone page */
-.invoice { --inv-ink:#1a1410; --inv-warm:#8B6914; --inv-cream:#faf7f2; --inv-light:#f0ebe0; --inv-border:#d4c9b0; --inv-muted:#7a6e5f; --inv-accent:#c4922a; }
+.invoice { --inv-ink:#1a1410; --inv-warm:#8B6914; --inv-cream:#faf7f2; --inv-light:#f0ebe0; --inv-border:#d4c9b0; --inv-muted:#7a6e5f; --inv-accent:#c4922a; border:none !important; outline:none !important; box-shadow:none !important; }
 @page { margin: 10mm; }
 /* Hide interactive elements */
 .no-print { display:none !important; }
