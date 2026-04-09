@@ -293,7 +293,7 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   /* Invoice container */
   #invoiceEl.invoice, #invoiceEl .invoice { border:none !important; padding:0 !important; box-shadow:none !important; max-width:100% !important; background:#fff !important; }
   /* Header: logo left, invoice type right */
-  #invoiceEl .inv-header { display:flex !important; justify-content:space-between !important; align-items:center !important; padding-bottom:18px !important; margin-bottom:22px !important; border-bottom:2px solid #1a1410 !important; }
+  #invoiceEl .inv-header { display:flex !important; justify-content:space-between !important; align-items:center !important; padding-bottom:18px !important; margin-bottom:22px !important; border-bottom:2px solid #1a1410 !important; color:#1a1410 !important; }
   #invoiceEl .inv-type { font-size:14px !important; font-weight:600 !important; letter-spacing:1px !important; text-transform:uppercase !important; text-align:right !important; }
   #invoiceEl .inv-type-date { font-size:11px !important; text-align:right !important; margin-top:4px !important; }
   /* Addresses: 2 columns */
@@ -305,8 +305,8 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #invoiceEl .inv-table thead { display:table-header-group !important; }
   #invoiceEl .inv-table tbody { display:table-row-group !important; }
   #invoiceEl .inv-table tr { display:table-row !important; page-break-inside:avoid !important; }
-  #invoiceEl .inv-table th { display:table-cell !important; font-size:9px !important; letter-spacing:1.5px !important; text-transform:uppercase !important; border-bottom:1px solid #e8dfc8 !important; padding:7px 8px !important; text-align:left !important; }
-  #invoiceEl .inv-table td { display:table-cell !important; padding:10px 8px !important; border-bottom:1px solid #f5f0e8 !important; vertical-align:top !important; font-size:12px !important; }
+  #invoiceEl .inv-table th { display:table-cell !important; font-size:9px !important; letter-spacing:1.5px !important; text-transform:uppercase !important; color:#7a6e5f !important; border-bottom:1px solid #d4c9b0 !important; padding:7px 8px !important; text-align:left !important; }
+  #invoiceEl .inv-table td { display:table-cell !important; padding:10px 8px !important; border-bottom:1px solid #f0ebe0 !important; vertical-align:top !important; font-size:12px !important; color:#1a1410 !important; }
   #invoiceEl .inv-table th.right, #invoiceEl .inv-table td.right { text-align:right !important; white-space:nowrap !important; }
   #invoiceEl .inv-table td.nowrap { white-space:nowrap !important; }
   #invoiceEl .inv-table tbody tr:last-child td { border-bottom:none !important; }
@@ -327,8 +327,8 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #invoiceEl .amount-words { display:block !important; font-size:10px !important; text-align:right !important; margin-top:10px !important; font-style:italic !important; padding-top:4px !important; border-top:1px solid #e8dfc8 !important; }
   #invoiceEl .freight-inline-wrap { display:inline-flex !important; align-items:center !important; }
   /* Notes and bottom footer */
-  #invoiceEl .inv-notes { display:block !important; border-top:1px solid #e8dfc8 !important; margin-top:24px !important; padding-top:14px !important; font-size:10px !important; line-height:1.9 !important; }
-  #invoiceEl .inv-bottom-footer { display:grid !important; grid-template-columns:1fr 1fr !important; gap:12px !important; border-top:1px solid #e8dfc8 !important; margin-top:16px !important; padding-top:14px !important; font-size:10px !important; line-height:1.8 !important; }
+  #invoiceEl .inv-notes { display:block !important; border-top:1px solid #d4c9b0 !important; margin-top:24px !important; padding-top:14px !important; font-size:10px !important; color:#7a6e5f !important; line-height:1.9 !important; }
+  #invoiceEl .inv-bottom-footer { display:grid !important; grid-template-columns:1fr 1fr !important; gap:12px !important; border-top:1px solid #d4c9b0 !important; margin-top:16px !important; padding-top:14px !important; font-size:10px !important; color:#7a6e5f !important; line-height:1.8 !important; }
   /* ── STEP 4: Hide interactive elements, show print values ── */
   .no-print, #pane-invoice .no-print { display:none !important; }
   #pane-invoice .print-only { display:inline !important; }
@@ -3668,6 +3668,8 @@ ${rootVars}
 ${invRules}
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin:0; padding:0; background:#fff; font-family:'DM Sans',sans-serif; color:#1a1410; }
+/* Hard-coded invoice variables for standalone page */
+.invoice { --inv-ink:#1a1410; --inv-warm:#8B6914; --inv-cream:#faf7f2; --inv-light:#f0ebe0; --inv-border:#d4c9b0; --inv-muted:#7a6e5f; --inv-accent:#c4922a; }
 @page { margin: 10mm; }
 /* Hide interactive elements */
 .no-print { display:none !important; }
