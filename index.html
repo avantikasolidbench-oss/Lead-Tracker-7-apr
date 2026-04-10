@@ -3557,6 +3557,14 @@ function inv_getInvoiceNumberStr() {
 }
 
 // Called when Print button is clicked - auto increments after printing
+function inv_editFreight(el) {
+  const cur = parseFloat(document.getElementById('freightAmt').value) || 0;
+  const val = prompt('Set freight amount (₹):', cur || '');
+  if (val === null) return;
+  const num = parseFloat(val) || 0;
+  document.getElementById('freightAmt').value = num || '';
+  inv_renderInvoice();
+}
 function inv_updateTotals() {
   const freight = parseFloat(document.getElementById('freightAmt').value) || 0;
   const subtotal = Math.round(invoiceItems.reduce((s, it) => {
@@ -4218,7 +4226,7 @@ function inv_renderInvoice(){
     <div class="inv-footer-row">
       <div class="totals-block">
         <div class="totals-row"><span>Subtotal</span><span class="totals-val">₹${subtotal.toLocaleString('en-IN')}</span></div>
-        <div class="totals-row"><span>Freight</span><span><span class="print-only">₹${(freight||0).toLocaleString('en-IN')}</span><input class="freight-inline-input no-print" type="number" id="freightAmtInline" value="${freight||''}" placeholder="0" oninput="document.getElementById('freightAmt').value=this.value;inv_updateTotals()" min="0"></span></div>
+        <div class="totals-row"><span>Freight</span><span id="freightDisplay" onclick="inv_editFreight(this)" style="cursor:pointer" title="Click to edit freight">${freight>0?'₹'+freight.toLocaleString('en-IN'):'—'}</span></div>
         <div class="totals-row"><span>GST – 18%</span><span class="totals-val">₹${gst.toLocaleString('en-IN')}</span></div>
         <div class="totals-row grand"><span>Grand Total</span><span class="totals-val">₹${grand.toLocaleString('en-IN')}</span></div>
         <div class="amount-words">${inv_toWords(grand)}</div>
