@@ -326,12 +326,12 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #invoiceEl .totals-block { display:block !important; min-width:220px !important; }
   #invoiceEl .totals-row { display:flex !important; justify-content:space-between !important; align-items:baseline !important; padding:4px 0 !important; font-size:12px !important; gap:40px !important; }
   #invoiceEl .totals-row span { display:inline !important; white-space:nowrap !important; }
-  #invoiceEl .totals-row.grand { display:flex !important; justify-content:space-between !important; border-top:2px solid #1a1410 !important; margin-top:6px !important; padding-top:8px !important; font-size:14px !important; font-weight:700 !important; }
+  #invoiceEl .totals-row.grand { display:flex !important; justify-content:space-between !important; border-top:2px solid #1a1410 !important; margin-top:6px !important; padding-top:8px !important; font-size:12px !important; font-weight:700 !important; }
   #invoiceEl .amount-words { display:block !important; font-size:10px !important; text-align:right !important; margin-top:10px !important; font-style:italic !important; padding-top:4px !important; border-top:1px solid #e8dfc8 !important; }
   #invoiceEl .freight-inline-wrap { display:inline-flex !important; align-items:center !important; }
   /* Notes and bottom footer */
-  #invoiceEl .inv-notes { display:block !important; border-top:1px solid #d4c9b0 !important; margin-top:24px !important; padding-top:14px !important; font-size:10px !important; color:#7a6e5f !important; line-height:1.9 !important; }
-  #invoiceEl .inv-bottom-footer { display:grid !important; grid-template-columns:1fr 1fr !important; gap:12px !important; border-top:1px solid #d4c9b0 !important; margin-top:16px !important; padding-top:14px !important; font-size:10px !important; color:#7a6e5f !important; line-height:1.8 !important; }
+  #invoiceEl .inv-notes { display:block !important; border-top:1px solid #d4c9b0 !important; margin-top:24px !important; padding-top:14px !important; font-size:12px !important; color:#7a6e5f !important; line-height:1.9 !important; }
+  #invoiceEl .inv-bottom-footer { display:grid !important; grid-template-columns:1fr 1fr !important; gap:12px !important; border-top:1px solid #d4c9b0 !important; margin-top:16px !important; padding-top:14px !important; font-size:12px !important; color:#7a6e5f !important; line-height:1.8 !important; }
   /* ── STEP 4: Hide interactive elements, show print values ── */
   .no-print, #pane-invoice .no-print { display:none !important; }
   #pane-invoice .print-only { display:inline !important; }
@@ -342,8 +342,9 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #invoiceEl .inv-name-wrap::before { content:attr(data-val); font-weight:500; font-size:12px; display:block; }
   #invoiceEl .inv-dims-wrap::before { content:attr(data-val); font-size:11px; color:#7a7060; display:block; }
   #invoiceEl .inv-wood-wrap::before { content:attr(data-val); font-size:12px; display:block; }
-  #invoiceEl .inv-offer-wrap input, #invoiceEl .inv-offer-wrap div { display:none !important; }
-  #invoiceEl .inv-offer-wrap::before { content:attr(data-val); color:#c4922a; font-weight:500; font-size:12px; }
+  #invoiceEl .inv-offer-wrap input, #invoiceEl .inv-offer-wrap div, #invoiceEl .inv-offer-wrap span { display:none !important; }
+  #invoiceEl .inv-offer-wrap > * { display:none !important; }
+.inv-offer-wrap::before { content:attr(data-val); color:#c4922a; font-weight:500; font-size:12px; }
   #invoiceEl .inv-qty-wrap input { display:none !important; }
   #invoiceEl .inv-qty-wrap::before { content:attr(data-val); font-size:12px; }
   #invoiceEl .inv-freight-wrap input { display:none !important; }
@@ -3685,6 +3686,7 @@ input, button, a { display:none !important; }
 .inv-name-wrap::before { content:attr(data-val); font-weight:500; font-size:12px; display:block; }
 .inv-dims-wrap::before { content:attr(data-val); font-size:12px; color:#7a7060; display:block; }
 .inv-wood-wrap::before { content:attr(data-val); font-size:12px; display:block; }
+.inv-offer-wrap > * { display:none !important; }
 .inv-offer-wrap::before { content:attr(data-val); color:#c4922a; font-weight:500; font-size:12px; }
 .inv-qty-wrap input { display:none !important; }
 .inv-qty-wrap::before { content:attr(data-val); font-size:12px; }
@@ -3962,6 +3964,15 @@ function inv_addCustomItem() {
 // ===================== REMOVE / UPDATE =====================
 function inv_removeItem(i) { invoiceItems.splice(i,1); inv_renderCatalog(); inv_renderInvoice(); }
 function inv_updateField(i,field,v) { invoiceItems[i][field]=v; }
+function inv_updateItemImage(i, input) {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    invoiceItems[i].img = e.target.result;
+    inv_renderInvoice();
+  };
+  reader.readAsDataURL(file);
+}
 function inv_updateQty(i,v) { invoiceItems[i].qty = parseInt(v)||1; inv_renderInvoice(); }
 function inv_updateDims(i,v) { invoiceItems[i].dims = v; }
 function inv_updatePrice(i,v) { invoiceItems[i].price = parseFloat(v)||0; if(!invoiceItems[i].hasDiscount) invoiceItems[i].offeredPrice=invoiceItems[i].price; inv_renderInvoice(); }
@@ -4128,9 +4139,16 @@ function inv_renderInvoice(){
     : invoiceItems.map((it,i)=>{
       const ep=it.hasDiscount?it.offeredPrice:it.price;
       const total=ep*it.qty;
+      const isWebImg = it.img && it.img.startsWith('http');
       const imgHtml = it.img
-        ? `<img class="item-thumb" src="${it.img}" onerror="this.style.display='none'">`
-        : `<div class="item-thumb-placeholder">▭</div>`;
+        ? `<div style="position:relative;display:inline-block">
+             <img class="item-thumb" src="${it.img}" onerror="this.style.display='none'">
+             ${!isWebImg ? `<label title="Update image" style="position:absolute;bottom:0;right:0;background:rgba(0,0,0,0.6);border-radius:2px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px">📷<input type="file" accept="image/*" style="display:none" onchange="inv_updateItemImage(${i},this)"></label>` : ''}
+           </div>`
+        : `<div style="position:relative;display:inline-block">
+             <div class="item-thumb-placeholder">▭</div>
+             <label title="Add image" style="position:absolute;bottom:0;right:0;background:rgba(0,0,0,0.6);border-radius:2px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px">📷<input type="file" accept="image/*" style="display:none" onchange="inv_updateItemImage(${i},this)"></label>
+           </div>`;
       const basePriceCell = `<span class="inv-baseprice-wrap" data-val="₹${it.price.toLocaleString('en-IN')}"><div style="display:inline-flex;align-items:center;gap:1px"><span style="font-size:12px;color:var(--inv-ink)">₹</span><input class="editable" type="number" value="${it.price}" onchange="inv_updatePrice(${i},this.value)" title="Base price" style="width:70px"></div></span>`;
       const offerPriceCell = it.hasDiscount
         ? `<span class="inv-offer-wrap" data-val="₹${it.offeredPrice.toLocaleString('en-IN')}">
