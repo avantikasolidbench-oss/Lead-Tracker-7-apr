@@ -3569,10 +3569,14 @@ function inv_updateTotals() {
   const rows = document.querySelectorAll('.totals-row');
   rows.forEach(row => {
     const label = row.querySelector('span:first-child');
-    const val = row.querySelector('span:last-child');
-    if (!label || !val) return;
-    if (label.textContent === 'GST – 18%') val.textContent = fmt(gst);
-    if (label.textContent === 'Grand Total') val.textContent = fmt(grand);
+    if (!label) return;
+    const val = row.querySelector('.totals-val');
+    if (label.textContent === 'GST – 18%' && val) val.textContent = fmt(gst);
+    if (label.textContent === 'Grand Total' && val) val.textContent = fmt(grand);
+    if (label.textContent === 'Freight') {
+      const po = row.querySelector('.print-only');
+      if (po) po.textContent = fmt(freight);
+    }
   });
   const wordsEl = document.querySelector('.amount-words');
   if (wordsEl) wordsEl.textContent = inv_toWords(grand);
@@ -4213,10 +4217,10 @@ function inv_renderInvoice(){
     </table>
     <div class="inv-footer-row">
       <div class="totals-block">
-        <div class="totals-row"><span>Subtotal</span><span>₹${subtotal.toLocaleString('en-IN')}</span></div>
+        <div class="totals-row"><span>Subtotal</span><span class="totals-val">₹${subtotal.toLocaleString('en-IN')}</span></div>
         <div class="totals-row"><span>Freight</span><span><span class="print-only">₹${(freight||0).toLocaleString('en-IN')}</span><input class="freight-inline-input no-print" type="number" id="freightAmtInline" value="${freight||''}" placeholder="0" oninput="document.getElementById('freightAmt').value=this.value;inv_updateTotals()" min="0"></span></div>
-        <div class="totals-row"><span>GST – 18%</span><span>₹${gst.toLocaleString('en-IN')}</span></div>
-        <div class="totals-row grand"><span>Grand Total</span><span>₹${grand.toLocaleString('en-IN')}</span></div>
+        <div class="totals-row"><span>GST – 18%</span><span class="totals-val">₹${gst.toLocaleString('en-IN')}</span></div>
+        <div class="totals-row grand"><span>Grand Total</span><span class="totals-val">₹${grand.toLocaleString('en-IN')}</span></div>
         <div class="amount-words">${inv_toWords(grand)}</div>
       </div>
     </div>
