@@ -4210,7 +4210,7 @@ function inv_renderInvoice(){
     <div class="inv-footer-row">
       <div class="totals-block">
         <div class="totals-row"><span>Subtotal</span><span>₹${subtotal.toLocaleString('en-IN')}</span></div>
-        <div class="totals-row"><span>Freight</span><span class="freight-inline-wrap"><span class="inv-freight-wrap" data-val="₹${freight||0}">₹<input class="freight-inline-input" type="number" id="freightAmtInline" value="${freight||''}" placeholder="0" oninput="document.getElementById('freightAmt').value=this.value;inv_updateTotals()" min="0"></span></span></div>
+        <div class="totals-row"><span>Freight</span><span class="freight-inline-wrap"><span class="inv-freight-wrap" data-val="₹${freight||0}"><input class="freight-inline-input" type="number" id="freightAmtInline" value="${freight||''}" placeholder="0" oninput="document.getElementById('freightAmt').value=this.value;inv_updateTotals()" min="0"></span></span></div>
         <div class="totals-row"><span>GST – 18%</span><span>₹${gst.toLocaleString('en-IN')}</span></div>
         <div class="totals-row grand"><span>Grand Total</span><span>₹${grand.toLocaleString('en-IN')}</span></div>
         <div class="amount-words">${inv_toWords(grand)}</div>
