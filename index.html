@@ -4186,7 +4186,6 @@ function inv_renderInvoice(){
           <div class="item-dims">📐 <span class="inv-dims-wrap" data-val="${(it.dims||'').replace(/"/g,'&quot;')}"><input class="editable wide" type="text" value="${(it.dims||'').replace(/"/g,'&quot;')}" onchange="inv_updateField(${i},'dims',this.value)" placeholder="dimensions…" title="Dimensions"></span></div>
           <div class="item-sub">
             ${it.url?`<a href="${it.url}" target="_blank">↗ view on website</a>`:''}
-            ${it.remarks?`<span class="tag">${it.remarks}</span>`:''}
           </div>
         </td>
         ${hasAnyHsn ? `<td style="text-align:center"><input class="editable" type="text" value="${it.hsn||''}" onchange="inv_updateField(${i},'hsn',this.value)" placeholder="HSN" style="width:54px;text-align:center"></td>` : ''}
