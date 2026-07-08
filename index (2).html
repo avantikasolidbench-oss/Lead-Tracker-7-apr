@@ -4154,8 +4154,8 @@ function inv_renderInvoice(){
   const today=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 
   const hasAnyDiscount = invoiceItems.some(it => it.hasDiscount);
-  const hasAnyHsn = invoiceItems.some(it => it.hsn);
-  const colCount = 8 + (hasAnyDiscount ? 1 : 0) + (hasAnyHsn ? 1 : 0);
+  const hasAnyHsn = true;
+  const colCount = 8 + (hasAnyDiscount ? 1 : 0) + 1;
 
   const rows = invoiceItems.length===0
     ? `<tr><td colspan="${colCount}" style="text-align:center;color:var(--inv-muted);padding:36px;font-size:12px">← Add items from the catalog</td></tr>`
