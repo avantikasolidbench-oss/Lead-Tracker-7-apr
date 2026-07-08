@@ -3979,6 +3979,12 @@ function inv_addCustomItem() {
 
 // ===================== REMOVE / UPDATE =====================
 function inv_removeItem(i) { invoiceItems.splice(i,1); inv_renderCatalog(); inv_renderInvoice(); }
+function inv_fillAllHsn() {
+  const code = prompt('Enter HSN code to apply to all items:', invoiceItems[0]?.hsn || '9403');
+  if (code === null) return;
+  invoiceItems.forEach(it => it.hsn = code.trim());
+  inv_renderInvoice();
+}
 function inv_updateField(i,field,v) { invoiceItems[i][field]=v; }
 function inv_updateItemImage(i, input) {
   const file = input.files[0]; if(!file) return;
@@ -4148,7 +4154,8 @@ function inv_renderInvoice(){
   const today=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 
   const hasAnyDiscount = invoiceItems.some(it => it.hasDiscount);
-  const colCount = hasAnyDiscount ? 9 : 8;
+  const hasAnyHsn = true;
+  const colCount = 8 + (hasAnyDiscount ? 1 : 0) + 1;
 
   const rows = invoiceItems.length===0
     ? `<tr><td colspan="${colCount}" style="text-align:center;color:var(--inv-muted);padding:36px;font-size:12px">← Add items from the catalog</td></tr>`
@@ -4182,6 +4189,7 @@ function inv_renderInvoice(){
             ${it.remarks?`<span class="tag">${it.remarks}</span>`:''}
           </div>
         </td>
+        ${hasAnyHsn ? `<td style="text-align:center"><input class="editable" type="text" value="${it.hsn||''}" onchange="inv_updateField(${i},'hsn',this.value)" placeholder="HSN" style="width:54px;text-align:center"></td>` : ''}
         <td><span class="inv-wood-wrap" data-val="${(it.wood||'').replace(/"/g,'&quot;')}"><input class="editable wide" type="text" value="${(it.wood||'').replace(/"/g,'&quot;')}" onchange="inv_updateField(${i},'wood',this.value)" placeholder="wood…"></span></td>
         <td><span class="inv-qty-wrap" data-val="${it.qty}"><input class="editable" type="number" value="${it.qty}" min="1" onchange="inv_updateQty(${i},this.value)"></span></td>
         <td class="nowrap">${basePriceCell}</td>
@@ -4219,7 +4227,7 @@ function inv_renderInvoice(){
     </div>
     <table class="inv-table">
       <thead><tr>
-        <th style="width:20px">#</th><th style="width:50px">Image</th><th style="min-width:160px">Item</th><th style="min-width:70px">Wood</th><th style="width:36px;white-space:nowrap">Qty</th><th style="min-width:90px;white-space:nowrap">Base Price</th>${hasAnyDiscount?'<th style="min-width:90px;white-space:nowrap">Offer Price</th>':''}<th class="right" style="min-width:80px;white-space:nowrap">Total</th><th style="width:20px"></th>
+        <th style="width:20px">#</th><th style="width:50px">Image</th><th style="min-width:160px">Item</th>${hasAnyHsn?'<th style="width:62px;text-align:center">HSN</th>':''}<th style="min-width:70px">Wood</th><th style="width:36px;white-space:nowrap">Qty</th><th style="min-width:90px;white-space:nowrap">Base Price</th>${hasAnyDiscount?'<th style="min-width:90px;white-space:nowrap">Offer Price</th>':''}<th class="right" style="min-width:80px;white-space:nowrap">Total</th><th style="width:20px"></th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
@@ -4636,6 +4644,7 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <button class="btn btn-outline" onclick="inv_saveInvoiceHTML()">↓ Save HTML</button>
       <button class="btn btn-outline" onclick="inv_clearInvoice()">Clear All</button>
+      <button class="btn btn-outline" onclick="inv_fillAllHsn()" title="Set the same HSN code on all items at once">HSN: Fill All</button>
       <button class="btn btn-primary" onclick="inv_printAndIncrement()">⎙ Print / PDF</button>
     </div>
     <!-- Row 3: Save to list -->
