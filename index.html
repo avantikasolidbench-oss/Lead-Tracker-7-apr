@@ -354,6 +354,8 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #invoiceEl .inv-baseprice-wrap > div { display:none !important; }
   #invoiceEl .inv-baseprice-wrap { display:inline !important; }
   #invoiceEl .inv-baseprice-wrap::before { content:attr(data-val); font-size:12px; display:inline !important; }
+  #invoiceEl .inv-table td input[placeholder="HSN"] { display:none !important; }
+  #invoiceEl .inv-table td.hsn-cell::before { content:attr(data-hsn); font-size:12px; display:block; text-align:center; }
 }
 </style>
 </head>
@@ -4188,7 +4190,7 @@ function inv_renderInvoice(){
             ${it.url?`<a href="${it.url}" target="_blank">↗ view on website</a>`:''}
           </div>
         </td>
-        ${hasAnyHsn ? `<td style="text-align:center"><input class="editable" type="text" value="${it.hsn||''}" onchange="inv_updateField(${i},'hsn',this.value)" placeholder="HSN" style="width:54px;text-align:center"></td>` : ''}
+        ${hasAnyHsn ? `<td class="hsn-cell" data-hsn="${it.hsn||''}" style="text-align:center"><input class="editable" type="text" value="${it.hsn||''}" onchange="inv_updateField(${i},'hsn',this.value);this.closest('td').setAttribute('data-hsn',this.value)" placeholder="HSN" style="width:54px;text-align:center"></td>` : ''}
         <td><span class="inv-wood-wrap" data-val="${(it.wood||'').replace(/"/g,'&quot;')}"><input class="editable wide" type="text" value="${(it.wood||'').replace(/"/g,'&quot;')}" onchange="inv_updateField(${i},'wood',this.value)" placeholder="wood…"></span></td>
         <td><span class="inv-qty-wrap" data-val="${it.qty}"><input class="editable" type="number" value="${it.qty}" min="1" onchange="inv_updateQty(${i},this.value)"></span></td>
         <td class="nowrap">${basePriceCell}</td>
