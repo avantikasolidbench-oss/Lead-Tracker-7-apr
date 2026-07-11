@@ -3666,6 +3666,8 @@ function inv_printAndIncrement() {
   const invoiceClone = document.getElementById('invoiceEl').cloneNode(true);
   // Remove no-print elements
   invoiceClone.querySelectorAll('.no-print, .remove-btn, button').forEach(el => el.remove());
+  // Remove print-only spans (we'll get values from inputs directly)
+  invoiceClone.querySelectorAll('.print-only').forEach(el => el.remove());
   // Replace text inputs with their current value as a span
   invoiceClone.querySelectorAll('input[type="text"], input[type="number"]').forEach(inp => {
     const span = document.createElement('span');
@@ -3673,8 +3675,6 @@ function inv_printAndIncrement() {
     span.style.fontSize = inp.style.fontSize || '12px';
     inp.replaceWith(span);
   });
-  // Show print-only spans
-  invoiceClone.querySelectorAll('.print-only').forEach(el => el.style.display = 'inline');
   // Remove website badge links
   invoiceClone.querySelectorAll('a').forEach(el => el.remove());
   const invoiceHTML = invoiceClone.innerHTML;
