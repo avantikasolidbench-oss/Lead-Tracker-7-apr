@@ -3662,8 +3662,22 @@ function inv_printAndIncrement() {
   const clientName = document.getElementById('billName').value.trim() || 'Invoice';
   const today = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 
-  // Grab just the invoice HTML
-  const invoiceHTML = document.getElementById('invoiceEl').innerHTML;
+  // Grab just the invoice HTML and preprocess for print
+  const invoiceClone = document.getElementById('invoiceEl').cloneNode(true);
+  // Remove no-print elements
+  invoiceClone.querySelectorAll('.no-print, .remove-btn, button').forEach(el => el.remove());
+  // Replace text inputs with their current value as a span
+  invoiceClone.querySelectorAll('input[type="text"], input[type="number"]').forEach(inp => {
+    const span = document.createElement('span');
+    span.textContent = inp.value;
+    span.style.fontSize = inp.style.fontSize || '12px';
+    inp.replaceWith(span);
+  });
+  // Show print-only spans
+  invoiceClone.querySelectorAll('.print-only').forEach(el => el.style.display = 'inline');
+  // Remove website badge links
+  invoiceClone.querySelectorAll('a').forEach(el => el.remove());
+  const invoiceHTML = invoiceClone.innerHTML;
 
   // Extract only the invoice-specific CSS rules we need
   // Get CSS custom properties (variables) from the style tag
@@ -4192,8 +4206,8 @@ function inv_renderInvoice(){
           </div>
         </td>
         ${hasAnyHsn ? `<td class="hsn-cell" style="text-align:center">
-          <span class="print-only" style="font-size:12px">${it.hsn||''}</span>
-          <input class="editable no-print" type="text" value="${it.hsn||''}" onchange="inv_updateField(${i},'hsn',this.value)" placeholder="HSN" style="width:54px;text-align:center">
+          <span class="print-only hsn-print-val" style="font-size:12px">${it.hsn||''}</span>
+          <input class="editable no-print" type="text" value="${it.hsn||''}" onchange="inv_updateField(${i},'hsn',this.value);this.previousElementSibling.textContent=this.value" placeholder="HSN" style="width:54px;text-align:center">
         </td>` : ''}
         <td><span class="inv-wood-wrap" data-val="${(it.wood||'').replace(/"/g,'&quot;')}"><input class="editable wide" type="text" value="${(it.wood||'').replace(/"/g,'&quot;')}" onchange="inv_updateField(${i},'wood',this.value)" placeholder="wood…"></span></td>
         <td><span class="inv-qty-wrap" data-val="${it.qty}"><input class="editable" type="number" value="${it.qty}" min="1" onchange="inv_updateQty(${i},this.value)"></span></td>
