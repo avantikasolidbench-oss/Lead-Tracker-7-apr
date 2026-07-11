@@ -354,9 +354,6 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   #invoiceEl .inv-baseprice-wrap > div { display:none !important; }
   #invoiceEl .inv-baseprice-wrap { display:inline !important; }
   #invoiceEl .inv-baseprice-wrap::before { content:attr(data-val); font-size:12px; display:inline !important; }
-  #invoiceEl .inv-hsn-wrap input { display:none !important; }
-  #invoiceEl .inv-hsn-wrap { display:block !important; text-align:center !important; }
-  #invoiceEl .inv-hsn-wrap::before { content:attr(data-val); font-size:12px; display:block !important; text-align:center !important; }
 }
 </style>
 </head>
@@ -3662,28 +3659,21 @@ function inv_printAndIncrement() {
   const clientName = document.getElementById('billName').value.trim() || 'Invoice';
   const today = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 
-  // Grab just the invoice HTML and preprocess for print
-  const invoiceClone = document.getElementById('invoiceEl').cloneNode(true);
-  // Remove no-print elements
-  invoiceClone.querySelectorAll('.no-print, .remove-btn, button').forEach(el => el.remove());
-  // Remove print-only spans
-  invoiceClone.querySelectorAll('.print-only').forEach(el => el.remove());
-  // Clear data-val on wrapper spans so CSS ::before pseudo-elements show nothing
-  invoiceClone.querySelectorAll('[data-val]').forEach(el => el.removeAttribute('data-val'));
-  // Replace text inputs with their current value as a span
-  invoiceClone.querySelectorAll('input[type="text"], input[type="number"]').forEach(inp => {
-    const span = document.createElement('span');
-    span.textContent = inp.value;
-    span.style.fontSize = inp.style.fontSize || '12px';
-    inp.replaceWith(span);
-  });
-  // Remove website badge links
-  invoiceClone.querySelectorAll('a').forEach(el => el.remove());
-  const invoiceHTML = invoiceClone.innerHTML;
+  // Grab just the invoice HTML
+  const invoiceHTML = document.getElementById('invoiceEl').innerHTML;
 
-  // Extract only CSS variables
+  // Extract only the invoice-specific CSS rules we need
+  // Get CSS custom properties (variables) from the style tag
   const allStyles = Array.from(document.querySelectorAll('style')).map(s=>s.innerHTML).join('\n');
+  // Extract :root variables
   const rootVars = (allStyles.match(/:root\s*\{[^}]+\}/g) || []).join('\n');
+  // Extract rules that contain "inv-" (invoice-specific)
+  const invRules = allStyles
+    .replace(/#pane-invoice\s*/g, '')
+    .split('}')
+    .filter(r => r.includes('.inv') || r.includes('.invoice') || r.includes('.totals') || r.includes('.no-print') || r.includes('.print-only'))
+    .map(r => r + '}')
+    .join('\n');
 
   // Build standalone print-ready page
   const html = `<!DOCTYPE html>
@@ -3694,18 +3684,36 @@ function inv_printAndIncrement() {
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 ${rootVars}
+${invRules}
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin:0; padding:0; background:#fff; font-family:'DM Sans',sans-serif; color:#1a1410; }
 /* Hard-coded invoice variables for standalone page */
 .invoice { --inv-ink:#1a1410; --inv-warm:#8B6914; --inv-cream:#faf7f2; --inv-light:#f0ebe0; --inv-border:#d4c9b0; --inv-muted:#7a6e5f; --inv-accent:#c4922a; border:none !important; outline:none !important; box-shadow:none !important; }
 @page { margin: 10mm; }
-/* Hide all interactive/screen-only elements - HTML is pre-processed so inputs already replaced */
-input, button, a, .no-print, .remove-btn, .website-badge, .print-only { display:none !important; }
-/* Wrapper spans - just display as block/inline, no ::before needed since inputs replaced with spans */
-.inv-name-wrap, .inv-dims-wrap, .inv-wood-wrap, .inv-hsn-wrap { display:block; }
-.inv-offer-wrap, .inv-qty-wrap, .inv-baseprice-wrap, .inv-freight-wrap, .freight-inline-wrap { display:inline !important; }
+/* Hide interactive elements */
+.no-print { display:none !important; }
+input, button, a { display:none !important; }
+/* Show print-only spans */
+.print-only { display:inline !important; }
+/* Inline wrapper display values */
+.inv-name-wrap, .inv-dims-wrap, .inv-wood-wrap, .inv-offer-wrap { display:block; }
+.inv-name-wrap::before { content:attr(data-val); font-weight:500; font-size:12px; display:block; }
+.inv-dims-wrap::before { content:attr(data-val); font-size:12px; color:#7a7060; display:block; }
+.inv-wood-wrap::before { content:attr(data-val); font-size:12px; display:block; }
+.inv-offer-wrap > * { display:none !important; }
+.inv-offer-wrap::before { content:attr(data-val); color:#c4922a; font-weight:500; font-size:12px; }
+.inv-qty-wrap input { display:none !important; }
+.inv-qty-wrap::before { content:attr(data-val); font-size:12px; }
+.freight-inline-wrap { display:inline !important; }
+.inv-freight-wrap { display:inline !important; }
+.inv-freight-wrap input { display:none !important; }
+.inv-freight-wrap::before { content:attr(data-val); font-size:12px; display:inline !important; }
+.inv-baseprice-wrap > div { display:none !important; }
+.inv-baseprice-wrap { display:inline !important; }
+.inv-baseprice-wrap::before { content:attr(data-val); font-size:12px; display:inline !important; }
 .totals-row { display:flex !important; justify-content:space-between !important; gap:40px !important; padding:4px 0 !important; }
 .totals-row.grand { font-size:14px !important; font-weight:700 !important; border-top:2px solid #1a1410 !important; margin-top:6px !important; padding-top:8px !important; }
+/* Force image size */
 img.item-thumb, .item-thumb { width:50px !important; height:50px !important; max-width:50px !important; max-height:50px !important; object-fit:cover !important; display:block !important; }
 </style>
 </head>
@@ -3971,12 +3979,6 @@ function inv_addCustomItem() {
 
 // ===================== REMOVE / UPDATE =====================
 function inv_removeItem(i) { invoiceItems.splice(i,1); inv_renderCatalog(); inv_renderInvoice(); }
-function inv_fillAllHsn() {
-  const code = prompt('Enter HSN code to apply to all items:', invoiceItems[0]?.hsn || '9403');
-  if (code === null) return;
-  invoiceItems.forEach(it => it.hsn = code.trim());
-  inv_renderInvoice();
-}
 function inv_updateField(i,field,v) { invoiceItems[i][field]=v; }
 function inv_updateItemImage(i, input) {
   const file = input.files[0]; if(!file) return;
@@ -4146,8 +4148,7 @@ function inv_renderInvoice(){
   const today=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 
   const hasAnyDiscount = invoiceItems.some(it => it.hasDiscount);
-  const hasAnyHsn = true;
-  const colCount = 8 + (hasAnyDiscount ? 1 : 0) + 1;
+  const colCount = hasAnyDiscount ? 9 : 8;
 
   const rows = invoiceItems.length===0
     ? `<tr><td colspan="${colCount}" style="text-align:center;color:var(--inv-muted);padding:36px;font-size:12px">← Add items from the catalog</td></tr>`
@@ -4180,10 +4181,6 @@ function inv_renderInvoice(){
             ${it.url?`<a href="${it.url}" target="_blank">↗ view on website</a>`:''}
           </div>
         </td>
-        ${hasAnyHsn ? `<td class="hsn-cell" style="text-align:center">
-          <span class="print-only hsn-print-val" style="font-size:12px">${it.hsn||''}</span>
-          <input class="editable no-print" type="text" value="${it.hsn||''}" onchange="inv_updateField(${i},'hsn',this.value);this.previousElementSibling.textContent=this.value" placeholder="HSN" style="width:54px;text-align:center">
-        </td>` : ''}
         <td><span class="inv-wood-wrap" data-val="${(it.wood||'').replace(/"/g,'&quot;')}"><input class="editable wide" type="text" value="${(it.wood||'').replace(/"/g,'&quot;')}" onchange="inv_updateField(${i},'wood',this.value)" placeholder="wood…"></span></td>
         <td><span class="inv-qty-wrap" data-val="${it.qty}"><input class="editable" type="number" value="${it.qty}" min="1" onchange="inv_updateQty(${i},this.value)"></span></td>
         <td class="nowrap">${basePriceCell}</td>
@@ -4221,7 +4218,7 @@ function inv_renderInvoice(){
     </div>
     <table class="inv-table">
       <thead><tr>
-        <th style="width:20px">#</th><th style="width:50px">Image</th><th style="min-width:160px">Item</th>${hasAnyHsn?'<th style="width:62px;text-align:center">HSN</th>':''}<th style="min-width:70px">Wood</th><th style="width:36px;white-space:nowrap">Qty</th><th style="min-width:90px;white-space:nowrap">Base Price</th>${hasAnyDiscount?'<th style="min-width:90px;white-space:nowrap">Offer Price</th>':''}<th class="right" style="min-width:80px;white-space:nowrap">Total</th><th style="width:20px"></th>
+        <th style="width:20px">#</th><th style="width:50px">Image</th><th style="min-width:160px">Item</th><th style="min-width:70px">Wood</th><th style="width:36px;white-space:nowrap">Qty</th><th style="min-width:90px;white-space:nowrap">Base Price</th>${hasAnyDiscount?'<th style="min-width:90px;white-space:nowrap">Offer Price</th>':''}<th class="right" style="min-width:80px;white-space:nowrap">Total</th><th style="width:20px"></th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
@@ -4638,7 +4635,6 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <button class="btn btn-outline" onclick="inv_saveInvoiceHTML()">↓ Save HTML</button>
       <button class="btn btn-outline" onclick="inv_clearInvoice()">Clear All</button>
-      <button class="btn btn-outline" onclick="inv_fillAllHsn()" title="Set the same HSN code on all items at once">HSN: Fill All</button>
       <button class="btn btn-primary" onclick="inv_printAndIncrement()">⎙ Print / PDF</button>
     </div>
     <!-- Row 3: Save to list -->
