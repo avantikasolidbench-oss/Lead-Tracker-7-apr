@@ -3681,18 +3681,9 @@ function inv_printAndIncrement() {
   invoiceClone.querySelectorAll('a').forEach(el => el.remove());
   const invoiceHTML = invoiceClone.innerHTML;
 
-  // Extract only the invoice-specific CSS rules we need
-  // Get CSS custom properties (variables) from the style tag
+  // Extract only CSS variables
   const allStyles = Array.from(document.querySelectorAll('style')).map(s=>s.innerHTML).join('\n');
-  // Extract :root variables
   const rootVars = (allStyles.match(/:root\s*\{[^}]+\}/g) || []).join('\n');
-  // Extract rules that contain "inv-" (invoice-specific)
-  const invRules = allStyles
-    .replace(/#pane-invoice\s*/g, '')
-    .split('}')
-    .filter(r => r.includes('.inv') || r.includes('.invoice') || r.includes('.totals') || r.includes('.no-print') || r.includes('.print-only'))
-    .map(r => r + '}')
-    .join('\n');
 
   // Build standalone print-ready page
   const html = `<!DOCTYPE html>
@@ -3703,36 +3694,18 @@ function inv_printAndIncrement() {
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 ${rootVars}
-${invRules}
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin:0; padding:0; background:#fff; font-family:'DM Sans',sans-serif; color:#1a1410; }
 /* Hard-coded invoice variables for standalone page */
 .invoice { --inv-ink:#1a1410; --inv-warm:#8B6914; --inv-cream:#faf7f2; --inv-light:#f0ebe0; --inv-border:#d4c9b0; --inv-muted:#7a6e5f; --inv-accent:#c4922a; border:none !important; outline:none !important; box-shadow:none !important; }
 @page { margin: 10mm; }
-/* Hide interactive elements */
-.no-print { display:none !important; }
-input, button, a { display:none !important; }
-/* Show print-only spans */
-.print-only { display:inline !important; }
-/* Inline wrapper display values */
-.inv-name-wrap, .inv-dims-wrap, .inv-wood-wrap, .inv-offer-wrap, .inv-hsn-wrap { display:block; }
-.inv-name-wrap::before { content:attr(data-val); font-weight:500; font-size:12px; display:block; }
-.inv-dims-wrap::before { content:attr(data-val); font-size:12px; color:#7a7060; display:block; }
-.inv-wood-wrap::before { content:attr(data-val); font-size:12px; display:block; }
-.inv-offer-wrap > * { display:none !important; }
-.inv-offer-wrap::before { content:attr(data-val); color:#c4922a; font-weight:500; font-size:12px; }
-.inv-qty-wrap input { display:none !important; }
-.inv-qty-wrap::before { content:attr(data-val); font-size:12px; }
-.freight-inline-wrap { display:inline !important; }
-.inv-freight-wrap { display:inline !important; }
-.inv-freight-wrap input { display:none !important; }
-.inv-freight-wrap::before { content:attr(data-val); font-size:12px; display:inline !important; }
-.inv-baseprice-wrap > div { display:none !important; }
-.inv-baseprice-wrap { display:inline !important; }
-.inv-baseprice-wrap::before { content:attr(data-val); font-size:12px; display:inline !important; }
+/* Hide all interactive/screen-only elements - HTML is pre-processed so inputs already replaced */
+input, button, a, .no-print, .remove-btn, .website-badge, .print-only { display:none !important; }
+/* Wrapper spans - just display as block/inline, no ::before needed since inputs replaced with spans */
+.inv-name-wrap, .inv-dims-wrap, .inv-wood-wrap, .inv-hsn-wrap { display:block; }
+.inv-offer-wrap, .inv-qty-wrap, .inv-baseprice-wrap, .inv-freight-wrap, .freight-inline-wrap { display:inline !important; }
 .totals-row { display:flex !important; justify-content:space-between !important; gap:40px !important; padding:4px 0 !important; }
 .totals-row.grand { font-size:14px !important; font-weight:700 !important; border-top:2px solid #1a1410 !important; margin-top:6px !important; padding-top:8px !important; }
-/* Force image size */
 img.item-thumb, .item-thumb { width:50px !important; height:50px !important; max-width:50px !important; max-height:50px !important; object-fit:cover !important; display:block !important; }
 </style>
 </head>
