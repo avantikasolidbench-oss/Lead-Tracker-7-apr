@@ -3666,8 +3666,10 @@ function inv_printAndIncrement() {
   const invoiceClone = document.getElementById('invoiceEl').cloneNode(true);
   // Remove no-print elements
   invoiceClone.querySelectorAll('.no-print, .remove-btn, button').forEach(el => el.remove());
-  // Remove print-only spans (we'll get values from inputs directly)
+  // Remove print-only spans
   invoiceClone.querySelectorAll('.print-only').forEach(el => el.remove());
+  // Clear data-val on wrapper spans so CSS ::before pseudo-elements show nothing
+  invoiceClone.querySelectorAll('[data-val]').forEach(el => el.removeAttribute('data-val'));
   // Replace text inputs with their current value as a span
   invoiceClone.querySelectorAll('input[type="text"], input[type="number"]').forEach(inp => {
     const span = document.createElement('span');
