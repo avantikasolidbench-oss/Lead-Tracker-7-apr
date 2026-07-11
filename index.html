@@ -3699,7 +3699,7 @@ input, button, a { display:none !important; }
 /* Show print-only spans */
 .print-only { display:inline !important; }
 /* Inline wrapper display values */
-.inv-name-wrap, .inv-dims-wrap, .inv-wood-wrap, .inv-offer-wrap { display:block; }
+.inv-name-wrap, .inv-dims-wrap, .inv-wood-wrap, .inv-offer-wrap, .inv-hsn-wrap { display:block; }
 .inv-name-wrap::before { content:attr(data-val); font-weight:500; font-size:12px; display:block; }
 .inv-dims-wrap::before { content:attr(data-val); font-size:12px; color:#7a7060; display:block; }
 .inv-wood-wrap::before { content:attr(data-val); font-size:12px; display:block; }
@@ -4191,7 +4191,10 @@ function inv_renderInvoice(){
             ${it.url?`<a href="${it.url}" target="_blank">↗ view on website</a>`:''}
           </div>
         </td>
-        ${hasAnyHsn ? `<td class="hsn-cell" style="text-align:center"><span class="inv-hsn-wrap" data-val="${it.hsn||''}" style="display:inline-block;text-align:center"><input class="editable" type="text" value="${it.hsn||''}" onchange="inv_updateField(${i},'hsn',this.value);this.closest('td').querySelector('.inv-hsn-wrap').setAttribute('data-val',this.value)" placeholder="HSN" style="width:54px;text-align:center"></span></td>` : ''}
+        ${hasAnyHsn ? `<td class="hsn-cell" style="text-align:center">
+          <span class="print-only" style="font-size:12px">${it.hsn||''}</span>
+          <input class="editable no-print" type="text" value="${it.hsn||''}" onchange="inv_updateField(${i},'hsn',this.value)" placeholder="HSN" style="width:54px;text-align:center">
+        </td>` : ''}
         <td><span class="inv-wood-wrap" data-val="${(it.wood||'').replace(/"/g,'&quot;')}"><input class="editable wide" type="text" value="${(it.wood||'').replace(/"/g,'&quot;')}" onchange="inv_updateField(${i},'wood',this.value)" placeholder="wood…"></span></td>
         <td><span class="inv-qty-wrap" data-val="${it.qty}"><input class="editable" type="number" value="${it.qty}" min="1" onchange="inv_updateQty(${i},this.value)"></span></td>
         <td class="nowrap">${basePriceCell}</td>
