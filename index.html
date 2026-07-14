@@ -3979,7 +3979,7 @@ function inv_addCustomItem() {
 
 // ===================== REMOVE / UPDATE =====================
 function inv_removeItem(i) { invoiceItems.splice(i,1); inv_renderCatalog(); inv_renderInvoice(); }
-function inv_updateField(i,field,v) { invoiceItems[i][field]=v; }
+function inv_updateField(i,field,v) { invoiceItems[i][field]=v; inv_renderInvoice(); }
 function inv_updateItemImage(i, input) {
   const file = input.files[0]; if(!file) return;
   const reader = new FileReader();
